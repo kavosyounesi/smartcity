@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+<title>لنده هوشمند | سامانه شهر هوشمند شهرستان لنده</title>
+<meta name="description" content="سامانه شهر هوشمند شهرستان لنده - بازارچه محلی، اخبار، فرمانداری، شهرداری، مدیریت بحران و گردشگری" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    display: inline-block;
+    line-height: 1;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  body { margin: 0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo } = React;
+
+/* ---------------------------------- ICONS (Material Symbols, no build step needed) ---------------------------------- */
+function Icon({ name, size = 18, color, style = {}, className = "" }) {
+  return (
+    <span
+      className={`material-symbols-outlined ${className}`}
+      style={{ fontSize: size, color: color || "currentColor", lineHeight: 1, display: "inline-flex", ...style }}
+    >
+      {name}
+    </span>
+  );
+}
+function makeIcon(name) {
+  return function IconAlias(props) { return <Icon name={name} {...props} />; };
+}
+
+const Home = makeIcon("home");
+const Newspaper = makeIcon("newspaper");
+const Store = makeIcon("storefront");
+const ShieldAlert = makeIcon("shield");
+const Menu = makeIcon("menu");
+const X = makeIcon("close");
+const ChevronLeft = makeIcon("chevron_left");
+const Building2 = makeIcon("apartment");
+const Landmark = makeIcon("account_balance");
+const MapPin = makeIcon("location_on");
+const Phone = makeIcon("call");
+const Plus = makeIcon("add");
+const Trash2 = makeIcon("delete");
+const Check = makeIcon("check");
+const LogIn = makeIcon("login");
+const LogOut = makeIcon("logout");
+const Clock = makeIcon("schedule");
+const CalendarDays = makeIcon("calendar_month");
+const Info = makeIcon("info");
+const Droplet = makeIcon("water_drop");
+const Mountain = makeIcon("landscape");
+const TreePine = makeIcon("park");
+const Flower2 = makeIcon("local_florist");
+const Camera = makeIcon("photo_camera");
+const Siren = makeIcon("campaign");
+const AlertTriangle = makeIcon("warning");
+const LayoutDashboard = makeIcon("dashboard");
+const Loader2 = makeIcon("progress_activity");
+const Send = makeIcon("send");
+const BadgeCheck = makeIcon("verified");
+const Hourglass = makeIcon("hourglass_empty");
+
+/* ---------------------------------- THEME ---------------------------------- */
+const C = {
+  primary: "#1F7A6C",      // turquoise - چشمه موگرمون (Mogarmoon spring)
+  primaryDark: "#15564C",
+  primarySoft: "#E4F1EE",
+  dark: "#16242B",         // کوه سیاه و سفید - night slate
+  darkSoft: "#22343C",
+  clay: "#A85B2A",         // باغات و صنایع دستی
+  claySoft: "#F3E6DA",
+  alert: "#C23B30",        // شقایق - poppy red
+  alertSoft: "#FBE8E6",
+  gold: "#D9A441",
+  cream: "#F4EFE4",        // سنگ آهکی
+  card: "#FFFFFF",
+  text: "#1E2624",
+  textSoft: "#5B6663",
+  border: "#E6E0D2",
+};
+
+const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap');`;
+
+/* ---------------------------------- HELPERS ---------------------------------- */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const today = () => {
+  try { return new Date().toLocaleDateString("fa-IR"); } catch (e) { return ""; }
+};
+
+/* ---------------------------------- STATIC DATA ---------------------------------- */
+const HOTLINES = [
+  { name: "پلیس", number: "110" },
+  { name: "اورژانس", number: "115" },
+  { name: "آتش‌نشانی", number: "125" },
+  { name: "امداد هلال‌احمر", number: "112" },
+  { name: "امداد برق", number: "121" },
+  { name: "امداد آب", number: "122" },
+  { name: "امداد گاز", number: "194" },
+  { name: "امداد جاده‌ای", number: "141" },
+];
+
+const TOURISM_ICONS = {
+  "چشمه": Droplet,
+  "طبیعی": Mountain,
+  "زیارتی": Landmark,
+  "روستا": TreePine,
+  "دشت": Flower2,
+};
+const TOURISM_CATEGORIES = Object.keys(TOURISM_ICONS);
+
+/* ---------------------------------- SEED CONTENT ---------------------------------- */
+const SEED_NEWS = [
+  { id: uid(), title: "آغاز جشنواره دشت شقایق‌های آل‌طیب لنده", category: "گردشگری", excerpt: "هم‌زمان با فرارسیدن بهار، دشت‌های شقایق منطقه آل‌طیب میزبان گردشگران نوروزی می‌شود.", date: today() },
+  { id: uid(), title: "آسفالت محور لنده - وحدت به بهره‌برداری رسید", category: "عمرانی", excerpt: "این پروژه با هدف تسهیل دسترسی روستاهای حاشیه رودخانه جن انجام شد.", date: today() },
+  { id: uid(), title: "تشکیل کارگروه پیشگیری از سیلاب در شهرستان لنده", category: "مدیریت بحران", excerpt: "با نزدیک شدن به فصل بارش، کارگروه ویژه پایش رودخانه‌های جن و مارون تشکیل شد.", date: today() },
+  { id: uid(), title: "ثبت‌نام دوره آموزش باغداری عناب و انار آغاز شد", category: "کشاورزی", excerpt: "جهاد کشاورزی لنده دوره رایگان آموزش باغداران منطقه را برگزار می‌کند.", date: today() },
+];
+
+const SEED_MARKET = [
+  { id: uid(), title: "عسل طبیعی کوهستانی لنده", price: "۴۵۰,۰۰۰ تومان / کیلو", category: "محصولات کشاورزی", phone: "0900000001", description: "عسل خالص از زنبورستان‌های ییلاقی منطقه موگرمون.", status: "approved", date: today() },
+  { id: uid(), title: "گردوی خشک باغ تراب", price: "۲۸۰,۰۰۰ تومان / کیلو", category: "محصولات کشاورزی", phone: "0900000002", description: "برداشت تازه، بدون واسطه از باغدار.", status: "approved", date: today() },
+  { id: uid(), title: "دست‌بافته‌های سنتی ایل طیبی", price: "توافقی", category: "صنایع‌دستی", phone: "0900000003", description: "گلیم و جاجیم بافت دست با نقوش محلی.", status: "approved", date: today() },
+  { id: uid(), title: "خدمات باغبانی و هرس درختان", price: "از ۲۰۰,۰۰۰ تومان", category: "خدمات", phone: "0900000004", description: "هرس، سم‌پاشی و نگهداری باغات عناب و گردو.", status: "approved", date: today() },
+];
+
+const SEED_GOV = [
+  { id: uid(), title: "اعلام برنامه ملاقات مردمی فرماندار", body: "شهروندان گرامی می‌توانند روزهای دوشنبه هر هفته از ساعت ۹ تا ۱۲ بدون وقت قبلی به ملاقات فرماندار مراجعه کنند.", date: today() },
+  { id: uid(), title: "برگزاری جلسه شورای اداری شهرستان", body: "جلسه هماهنگی دستگاه‌های اجرایی با محوریت پیگیری پروژه‌های عمرانی برگزار شد.", date: today() },
+];
+
+const SEED_MUNI = [
+  { id: uid(), title: "تغییر ساعت جمع‌آوری پسماند شهری", body: "از این هفته جمع‌آوری زباله محله‌های مرکزی شهر به ساعت ۲۱ تا ۲۳ منتقل می‌شود.", date: today() },
+  { id: uid(), title: "آغاز طرح زیباسازی میدان مرکزی لنده", body: "این طرح شامل کاشت فضای سبز و بهسازی نمای میدان مرکزی شهر است.", date: today() },
+];
+
+const SEED_ALERTS = [
+  { id: uid(), title: "احتمال بارش‌های سیل‌آسا در ارتفاعات", level: "هشدار", body: "بر اساس اعلام هواشناسی، از ساکنان حاشیه رودخانه‌های جن و مارون درخواست می‌شود هوشیار باشند.", active: true, date: today() },
+];
+
+const SEED_TOURISM = [
+  { id: uid(), name: "چشمه موگرمون", category: "چشمه", description: "معروف به «بهشت گمشده»؛ چشمه‌ای همیشه‌جوشان با آب زلال در مسیر روستای وحدت، مقصد اصلی گردشگران نوروزی.", date: today() },
+  { id: uid(), name: "شترسنگی لنده", category: "طبیعی", description: "صخره‌ای طبیعی به شکل شتر که آن را بزرگ‌ترین شترسنگی جهان می‌دانند.", date: today() },
+  { id: uid(), name: "روستای عروه", category: "روستا", description: "روستایی با چشم‌انداز پلکانی شبیه ماسوله، در میان باغات عناب و گردو.", date: today() },
+  { id: uid(), name: "کوه سیاه و سفید", category: "طبیعی", description: "ارتفاعاتی با دو رنگ متمایز سنگ که چشم‌اندازی کم‌نظیر برای طبیعت‌گردی ایجاد کرده‌اند.", date: today() },
+  { id: uid(), name: "امامزاده سیدعمادالدین ولی", category: "زیارتی", description: "بستری برای گردشگری زیارتی در کنار طبیعت اطراف.", date: today() },
+  { id: uid(), name: "دشت شقایق‌های آل‌طیب", category: "دشت", description: "در فصل بهار، این دشت‌ها مملو از گل‌های شقایق وحشی می‌شوند.", date: today() },
+];
+
+const SEED_EVENTS = [
+  { id: uid(), title: "جشنواره دشت شقایق", date: "اسفند تا فروردین", location: "دشت آل‌طیب", description: "جشنواره فصلی گردشگری هم‌زمان با شکوفایی شقایق‌های وحشی." },
+  { id: uid(), title: "نمایشگاه صنایع‌دستی ایل طیبی", date: "تابستان", location: "میدان مرکزی لنده", description: "نمایش و فروش دست‌بافته‌ها و صنایع‌دستی محلی." },
+];
+
+/* ---------------------------------- API CLIENT ---------------------------------- */
+const API_BASE = "/api";
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(`${API_BASE}/${path}`, {
+    credentials: "include",
+    headers: options.body ? { "Content-Type": "application/json" } : undefined,
+    ...options,
+  });
+  let data = null;
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok) throw new Error((data && data.error) || "خطا در ارتباط با سرور");
+  return data;
+}
+
+// خواندن فهرستی از منابع عمومی (اخبار، فرمانداری، شهرداری، گردشگری، رویدادها، هشدارها)
+function useApiList(table, seed = []) {
+  const [items, setItems] = useState(null);
+
+  const reload = async () => {
+    try {
+      const data = await apiFetch(`resource.php?table=${table}`);
+      setItems(data);
+    } catch (e) {
+      setItems(seed);
+    }
+  };
+
+  useEffect(() => { reload(); /* eslint-disable-next-line */ }, [table]);
+
+  return [items, reload];
+}
+
+/* ---------------------------------- SMALL UI PRIMITIVES ---------------------------------- */
+function MountainRidge({ color = C.primary, height = 22 }) {
+  return (
+    <svg viewBox="0 0 400 40" preserveAspectRatio="none" style={{ width: "100%", height, display: "block" }}>
+      <path
+        d="M0,40 L0,26 L35,10 L60,22 L95,4 L130,24 L165,14 L200,28 L235,8 L270,22 L305,12 L340,26 L370,16 L400,24 L400,40 Z"
+        fill={color}
+      />
+    </svg>
+  );
+}
+
+function Badge({ children, tone = "primary" }) {
+  const tones = {
+    primary: { bg: C.primarySoft, color: C.primaryDark },
+    clay: { bg: C.claySoft, color: C.clay },
+    alert: { bg: C.alertSoft, color: C.alert },
+    gold: { bg: "#FBF1DD", color: "#9A6F1E" },
+  };
+  const t = tones[tone] || tones.primary;
+  return (
+    <span
+      className="inline-flex items-center text-xs font-bold px-2 py-1 rounded-full"
+      style={{ backgroundColor: t.bg, color: t.color }}
+    >
+      {children}
+    </span>
+  );
+}
+
+function Card({ children, onClick, className = "", style = {} }) {
+  return (
+    <div
+      onClick={onClick}
+      className={`rounded-2xl shadow-sm ${onClick ? "active:scale-[0.98] cursor-pointer" : ""} ${className}`}
+      style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, transition: "transform 0.1s", ...style }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function SectionTitle({ icon: Icon, title, subtitle }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      {Icon && (
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: C.primarySoft }}>
+          <Icon size={16} style={{ color: C.primaryDark }} />
+        </div>
+      )}
+      <div>
+        <h2 className="text-base font-extrabold" style={{ color: C.text }}>{title}</h2>
+        {subtitle && <p className="text-xs" style={{ color: C.textSoft }}>{subtitle}</p>}
+      </div>
+    </div>
+  );
+}
+
+function ScreenHeader({ title, onBack }) {
+  return (
+    <div style={{ backgroundColor: C.dark }} className="sticky top-0 z-20">
+      <div className="flex items-center gap-2 px-4 pt-4 pb-3">
+        {onBack && (
+          <button onClick={onBack} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
+            <ChevronLeft size={18} color="#fff" style={{ transform: "rotate(180deg)" }} />
+          </button>
+        )}
+        <h1 className="text-white font-extrabold text-lg">{title}</h1>
+      </div>
+      <MountainRidge color={C.cream} height={14} />
+    </div>
+  );
+}
+
+function EmptyState({ icon: Icon = Info, text }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 text-center">
+      <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3" style={{ backgroundColor: C.primarySoft }}>
+        <Icon size={24} style={{ color: C.primaryDark }} />
+      </div>
+      <p className="text-sm font-medium" style={{ color: C.textSoft }}>{text}</p>
+    </div>
+  );
+}
+
+function Loading() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16">
+      <Loader2 size={26} className="animate-spin" style={{ color: C.primary }} />
+      <p className="text-xs mt-2" style={{ color: C.textSoft }}>در حال بارگذاری...</p>
+    </div>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <label className="block mb-3">
+      <span className="block text-xs font-bold mb-1.5" style={{ color: C.textSoft }}>{label}</span>
+      {children}
+    </label>
+  );
+}
+
+const inputStyle = {
+  width: "100%",
+  borderRadius: "0.75rem",
+  border: `1px solid ${C.border}`,
+  padding: "0.6rem 0.8rem",
+  fontSize: "0.875rem",
+  outline: "none",
+  fontFamily: "inherit",
+  backgroundColor: "#fff",
+  color: C.text,
+};
+
+/* ---------------------------------- HOME SCREEN ---------------------------------- */
+function HomeScreen({ go, openAdmin }) {
+  const [news] = useApiList("news", SEED_NEWS);
+  const [alerts] = useApiList("crisis_alerts", SEED_ALERTS);
+  const activeAlert = alerts && alerts.find((a) => a.active);
+
+  const services = [
+    { key: "market", label: "بازارچه محلی", icon: Store, tone: C.clay },
+    { key: "news", label: "اخبار لنده", icon: Newspaper, tone: C.primary },
+    { key: "gov", label: "فرمانداری", icon: Landmark, tone: C.dark },
+    { key: "muni", label: "شهرداری", icon: Building2, tone: C.dark },
+    { key: "crisis", label: "مدیریت بحران", icon: ShieldAlert, tone: C.alert },
+    { key: "tourism", label: "گردشگری", icon: Mountain, tone: C.gold },
+  ];
+
+  return (
+    <div className="pb-6">
+      <div style={{ backgroundColor: C.dark }} className="px-5 pt-6 pb-5">
+        <p className="text-xs" style={{ color: "#9FB3AC" }}>به سامانه شهر هوشمند خوش آمدید</p>
+        <h1 className="text-white text-2xl font-extrabold mt-1">لنده هوشمند</h1>
+        <p className="text-xs mt-1" style={{ color: "#9FB3AC" }}>شهرستان لنده، استان کهگیلویه و بویراحمد</p>
+      </div>
+      <MountainRidge color={C.cream} height={16} />
+
+      <div className="px-4 -mt-1">
+        {activeAlert && (
+          <button onClick={() => go("crisis")} className="w-full text-right mb-4 rounded-2xl p-3.5 flex items-start gap-3" style={{ backgroundColor: C.alertSoft, border: `1px solid #EBC4BF` }}>
+            <Siren size={20} style={{ color: C.alert, flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <p className="text-sm font-extrabold" style={{ color: C.alert }}>{activeAlert.title}</p>
+              <p className="text-xs mt-0.5" style={{ color: "#8A332B" }}>برای جزئیات بیشتر و شماره‌های اضطراری ضربه بزنید</p>
+            </div>
+          </button>
+        )}
+
+        <SectionTitle title="خدمات شهر" subtitle="دسترسی سریع به بخش‌های شهر هوشمند لنده" />
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {services.map((s) => (
+            <button key={s.key} onClick={() => go(s.key)} className="flex flex-col items-center gap-2 rounded-2xl py-4 px-1 active:scale-95" style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: s.tone + "1A" }}>
+                <s.icon size={18} style={{ color: s.tone }} />
+              </div>
+              <span className="text-[11px] font-bold leading-tight text-center" style={{ color: C.text }}>{s.label}</span>
+            </button>
+          ))}
+        </div>
+
+        <SectionTitle icon={Newspaper} title="تازه‌ترین اخبار" />
+        <div className="space-y-2.5 mb-6">
+          {!news && <Loading />}
+          {news && news.slice(0, 3).map((n) => (
+            <Card key={n.id} onClick={() => go("news")} className="p-3.5">
+              <div className="flex items-center justify-between mb-1.5">
+                <Badge>{n.category}</Badge>
+                <span className="text-[11px]" style={{ color: C.textSoft }}>{n.date}</span>
+              </div>
+              <p className="text-sm font-bold leading-snug" style={{ color: C.text }}>{n.title}</p>
+            </Card>
+          ))}
+        </div>
+
+        <button onClick={openAdmin} className="w-full flex items-center justify-center gap-2 text-xs font-bold py-3 rounded-xl" style={{ color: C.textSoft, border: `1px dashed ${C.border}` }}>
+          <LogIn size={14} /> ورود مدیر سامانه
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- NEWS SCREEN ---------------------------------- */
+function NewsScreen({ goBack }) {
+  const [news] = useApiList("news", SEED_NEWS);
+  const [active, setActive] = useState(null);
+
+  if (active) {
+    return (
+      <div>
+        <ScreenHeader title="جزئیات خبر" onBack={() => setActive(null)} />
+        <div className="p-4">
+          <Badge>{active.category}</Badge>
+          <h1 className="text-lg font-extrabold mt-3 leading-snug" style={{ color: C.text }}>{active.title}</h1>
+          <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: C.textSoft }}><Clock size={12} /> {active.date}</p>
+          <p className="text-sm leading-7 mt-4" style={{ color: C.text }}>{active.excerpt}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <ScreenHeader title="اخبار شهرستان لنده" onBack={goBack} />
+      <div className="p-4 space-y-2.5">
+        {!news && <Loading />}
+        {news && news.length === 0 && <EmptyState icon={Newspaper} text="هنوز خبری منتشر نشده است." />}
+        {news && news.map((n) => (
+          <Card key={n.id} onClick={() => setActive(n)} className="p-3.5">
+            <div className="flex items-center justify-between mb-1.5">
+              <Badge>{n.category}</Badge>
+              <span className="text-[11px]" style={{ color: C.textSoft }}>{n.date}</span>
+            </div>
+            <p className="text-sm font-bold leading-snug mb-1" style={{ color: C.text }}>{n.title}</p>
+            <p className="text-xs leading-relaxed" style={{ color: C.textSoft }}>{n.excerpt}</p>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- MARKET SCREEN ---------------------------------- */
+const MARKET_CATEGORIES = ["محصولات کشاورزی", "صنایع‌دستی", "خدمات", "کالای دیجیتال و خانگی", "سایر"];
+
+function MarketScreen({ goBack }) {
+  const [market, setMarket] = useState(null);
+  const [active, setActive] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [filter, setFilter] = useState("همه");
+  const [form, setForm] = useState({ title: "", price: "", category: MARKET_CATEGORIES[0], phone: "", description: "" });
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setMarket(await apiFetch("market.php"));
+      } catch (e) {
+        setMarket(SEED_MARKET);
+      }
+    })();
+  }, []);
+
+  const approved = useMemo(() => (market || []).filter((m) => m.status === "approved"), [market]);
+  const filtered = filter === "همه" ? approved : approved.filter((m) => m.category === filter);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!form.title || !form.phone) return;
+    setError("");
+    try {
+      await apiFetch("market.php", { method: "POST", body: JSON.stringify({ ...form, date: today() }) });
+      setForm({ title: "", price: "", category: MARKET_CATEGORIES[0], phone: "", description: "" });
+      setShowForm(false);
+      setSubmitted(true);
+    } catch (e2) {
+      setError("ثبت آگهی با خطا مواجه شد. لطفاً دوباره تلاش کنید.");
+    }
+  };
+
+  if (active) {
+    return (
+      <div>
+        <ScreenHeader title="جزئیات آگهی" onBack={() => setActive(null)} />
+        <div className="p-4">
+          <Badge tone="clay">{active.category}</Badge>
+          <h1 className="text-lg font-extrabold mt-3" style={{ color: C.text }}>{active.title}</h1>
+          <p className="text-xl font-extrabold mt-2" style={{ color: C.clay }}>{active.price}</p>
+          <p className="text-sm leading-7 mt-4" style={{ color: C.text }}>{active.description}</p>
+          <a href={`tel:${active.phone}`} className="mt-6 w-full flex items-center justify-center gap-2 text-white font-bold py-3 rounded-xl" style={{ backgroundColor: C.primary }}>
+            <Phone size={16} /> تماس با آگهی‌دهنده
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <ScreenHeader title="بازارچه محلی لنده" onBack={goBack} />
+      <div className="p-4">
+        {submitted && (
+          <div className="flex items-center gap-2 text-xs font-bold rounded-xl p-3 mb-3" style={{ backgroundColor: C.primarySoft, color: C.primaryDark }}>
+            <Hourglass size={14} /> آگهی شما ثبت شد و پس از تایید مدیر سامانه نمایش داده می‌شود.
+          </div>
+        )}
+        {error && (
+          <div className="flex items-center gap-2 text-xs font-bold rounded-xl p-3 mb-3" style={{ backgroundColor: C.alertSoft, color: C.alert }}>
+            <AlertTriangle size={14} /> {error}
+          </div>
+        )}
+
+        <div className="flex gap-2 overflow-x-auto pb-1 mb-3 -mx-1 px-1">
+          {["همه", ...MARKET_CATEGORIES].map((c) => (
+            <button key={c} onClick={() => setFilter(c)} className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-full" style={filter === c ? { backgroundColor: C.dark, color: "#fff" } : { backgroundColor: C.card, color: C.textSoft, border: `1px solid ${C.border}` }}>
+              {c}
+            </button>
+          ))}
+        </div>
+
+        <button onClick={() => setShowForm((s) => !s)} className="w-full flex items-center justify-center gap-2 text-sm font-bold py-3 rounded-xl mb-4 text-white" style={{ backgroundColor: C.clay }}>
+          <Plus size={16} /> {showForm ? "بستن فرم" : "ثبت آگهی جدید"}
+        </button>
+
+        {showForm && (
+          <form onSubmit={submit} className="rounded-2xl p-4 mb-4" style={{ backgroundColor: C.claySoft }}>
+            <Field label="عنوان آگهی">
+              <input style={inputStyle} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+            </Field>
+            <Field label="قیمت (یا «توافقی»)">
+              <input style={inputStyle} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+            </Field>
+            <Field label="دسته‌بندی">
+              <select style={inputStyle} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                {MARKET_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </Field>
+            <Field label="شماره تماس">
+              <input style={inputStyle} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
+            </Field>
+            <Field label="توضیحات">
+              <textarea style={{ ...inputStyle, minHeight: 70 }} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </Field>
+            <button type="submit" className="w-full flex items-center justify-center gap-2 text-sm font-bold py-2.5 rounded-xl text-white" style={{ backgroundColor: C.primary }}>
+              <Send size={14} /> ارسال برای تایید
+            </button>
+          </form>
+        )}
+
+        <div className="space-y-2.5">
+          {!market && <Loading />}
+          {market && filtered.length === 0 && <EmptyState icon={Store} text="آگهی‌ای در این دسته‌بندی یافت نشد." />}
+          {filtered.map((m) => (
+            <Card key={m.id} onClick={() => setActive(m)} className="p-3.5">
+              <div className="flex items-center justify-between mb-1.5">
+                <Badge tone="clay">{m.category}</Badge>
+                <span className="text-[11px]" style={{ color: C.textSoft }}>{m.date}</span>
+              </div>
+              <p className="text-sm font-bold leading-snug" style={{ color: C.text }}>{m.title}</p>
+              <p className="text-sm font-extrabold mt-1" style={{ color: C.clay }}>{m.price}</p>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- GOVERNORATE / MUNICIPALITY ---------------------------------- */
+function AnnouncementScreen({ title, table, seed, goBack, icon: Icon }) {
+  const [items] = useApiList(table, seed);
+  return (
+    <div>
+      <ScreenHeader title={title} onBack={goBack} />
+      <div className="p-4 space-y-2.5">
+        {!items && <Loading />}
+        {items && items.length === 0 && <EmptyState icon={Icon} text="اطلاعیه‌ای ثبت نشده است." />}
+        {items && items.map((g) => (
+          <Card key={g.id} className="p-3.5">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <Icon size={14} style={{ color: C.dark }} />
+                <span className="text-[11px] font-bold" style={{ color: C.textSoft }}>{g.date}</span>
+              </div>
+            </div>
+            <p className="text-sm font-bold leading-snug mb-1" style={{ color: C.text }}>{g.title}</p>
+            <p className="text-xs leading-relaxed" style={{ color: C.textSoft }}>{g.body}</p>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- CRISIS MANAGEMENT ---------------------------------- */
+function CrisisScreen({ goBack }) {
+  const [alerts] = useApiList("crisis_alerts", SEED_ALERTS);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ type: "", location: "", description: "", contact: "" });
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+
+  const levelTone = { "بحرانی": "alert", "هشدار": "gold", "اطلاعیه": "primary" };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!form.type || !form.location) return;
+    setError("");
+    try {
+      await apiFetch("reports.php", { method: "POST", body: JSON.stringify({ ...form, date: today() }) });
+      setForm({ type: "", location: "", description: "", contact: "" });
+      setShowForm(false);
+      setSent(true);
+    } catch (e2) {
+      setError("ثبت گزارش با خطا مواجه شد. لطفاً دوباره تلاش کنید.");
+    }
+  };
+
+  return (
+    <div>
+      <ScreenHeader title="مدیریت بحران" onBack={goBack} />
+      <div className="p-4">
+        <SectionTitle icon={Siren} title="هشدارها و اطلاعیه‌ها" />
+        <div className="space-y-2.5 mb-6">
+          {!alerts && <Loading />}
+          {alerts && alerts.filter((a) => a.active).length === 0 && <EmptyState icon={ShieldAlert} text="در حال حاضر هشدار فعالی وجود ندارد." />}
+          {alerts && alerts.filter((a) => a.active).map((a) => (
+            <Card key={a.id} className="p-3.5" style={{ borderColor: a.level === "بحرانی" ? "#EBC4BF" : C.border }}>
+              <Badge tone={levelTone[a.level] || "primary"}>{a.level}</Badge>
+              <p className="text-sm font-bold mt-2" style={{ color: C.text }}>{a.title}</p>
+              <p className="text-xs leading-relaxed mt-1" style={{ color: C.textSoft }}>{a.body}</p>
+            </Card>
+          ))}
+        </div>
+
+        <SectionTitle icon={Phone} title="شماره‌های اضطراری" />
+        <div className="grid grid-cols-2 gap-2.5 mb-6">
+          {HOTLINES.map((h) => (
+            <a key={h.name} href={`tel:${h.number}`} className="flex items-center justify-between rounded-xl px-3.5 py-3" style={{ backgroundColor: C.darkSoft }}>
+              <span className="text-xs font-bold text-white">{h.name}</span>
+              <span className="text-sm font-extrabold" style={{ color: C.gold }}>{h.number}</span>
+            </a>
+          ))}
+        </div>
+
+        <SectionTitle icon={AlertTriangle} title="ثبت گزارش حادثه یا مشکل شهری" subtitle="مثل آبگرفتگی، خرابی روشنایی، خطر سقوط درخت و..." />
+        {sent && (
+          <div className="flex items-center gap-2 text-xs font-bold rounded-xl p-3 mb-3" style={{ backgroundColor: C.primarySoft, color: C.primaryDark }}>
+            <Check size={14} /> گزارش شما ثبت شد و در صف بررسی قرار گرفت.
+          </div>
+        )}
+        {error && (
+          <div className="flex items-center gap-2 text-xs font-bold rounded-xl p-3 mb-3" style={{ backgroundColor: C.alertSoft, color: C.alert }}>
+            <AlertTriangle size={14} /> {error}
+          </div>
+        )}
+        <button onClick={() => setShowForm((s) => !s)} className="w-full flex items-center justify-center gap-2 text-sm font-bold py-3 rounded-xl mb-3 text-white" style={{ backgroundColor: C.alert }}>
+          <Plus size={16} /> {showForm ? "بستن فرم" : "ثبت گزارش جدید"}
+        </button>
+        {showForm && (
+          <form onSubmit={submit} className="rounded-2xl p-4" style={{ backgroundColor: C.alertSoft }}>
+            <Field label="نوع حادثه">
+              <input style={inputStyle} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} required />
+            </Field>
+            <Field label="مکان دقیق">
+              <input style={inputStyle} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} required />
+            </Field>
+            <Field label="توضیحات">
+              <textarea style={{ ...inputStyle, minHeight: 70 }} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </Field>
+            <Field label="شماره تماس شما">
+              <input style={inputStyle} value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
+            </Field>
+            <button type="submit" className="w-full flex items-center justify-center gap-2 text-sm font-bold py-2.5 rounded-xl text-white" style={{ backgroundColor: C.alert }}>
+              <Send size={14} /> ارسال گزارش
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- TOURISM ---------------------------------- */
+function TourismScreen({ goBack }) {
+  const [places] = useApiList("tourism", SEED_TOURISM);
+  const [active, setActive] = useState(null);
+
+  if (active) {
+    const Icon = TOURISM_ICONS[active.category] || Camera;
+    return (
+      <div>
+        <ScreenHeader title="جاذبه گردشگری" onBack={() => setActive(null)} />
+        <div className="h-40 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${C.primary}, ${C.dark})` }}>
+          <Icon size={42} color="#fff" />
+        </div>
+        <div className="p-4">
+          <Badge tone="gold">{active.category}</Badge>
+          <h1 className="text-lg font-extrabold mt-3" style={{ color: C.text }}>{active.name}</h1>
+          <p className="text-sm leading-7 mt-3" style={{ color: C.text }}>{active.description}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <ScreenHeader title="گردشگری لنده" onBack={goBack} />
+      <div className="p-4 grid grid-cols-2 gap-3">
+        {!places && <Loading />}
+        {places && places.map((p) => {
+          const Icon = TOURISM_ICONS[p.category] || Camera;
+          return (
+            <Card key={p.id} onClick={() => setActive(p)} className="overflow-hidden">
+              <div className="h-20 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${C.primary}, ${C.dark})` }}>
+                <Icon size={26} color="#fff" />
+              </div>
+              <div className="p-2.5">
+                <p className="text-xs font-bold leading-snug" style={{ color: C.text }}>{p.name}</p>
+                <p className="text-[10px] mt-1" style={{ color: C.textSoft }}>{p.category}</p>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- MORE SCREEN ---------------------------------- */
+function MoreScreen({ go, goBack, openAdmin }) {
+  const [events] = useApiList("events", SEED_EVENTS);
+
+  const links = [
+    { key: "gov", label: "فرمانداری لنده", icon: Landmark },
+    { key: "muni", label: "شهرداری لنده", icon: Building2 },
+    { key: "tourism", label: "گردشگری", icon: Mountain },
+  ];
+
+  return (
+    <div>
+      <ScreenHeader title="بیشتر" onBack={goBack} />
+      <div className="p-4">
+        <div className="grid grid-cols-1 gap-2 mb-6">
+          {links.map((l) => (
+            <button key={l.key} onClick={() => go(l.key)} className="flex items-center justify-between rounded-xl p-3.5" style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+              <div className="flex items-center gap-2.5">
+                <l.icon size={17} style={{ color: C.primaryDark }} />
+                <span className="text-sm font-bold" style={{ color: C.text }}>{l.label}</span>
+              </div>
+              <ChevronLeft size={16} style={{ color: C.textSoft }} />
+            </button>
+          ))}
+        </div>
+
+        <SectionTitle icon={CalendarDays} title="رویدادهای شهر" />
+        <div className="space-y-2.5 mb-6">
+          {!events && <Loading />}
+          {events && events.map((ev) => (
+            <Card key={ev.id} className="p-3.5">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-sm font-bold" style={{ color: C.text }}>{ev.title}</p>
+                <Badge tone="gold">{ev.date}</Badge>
+              </div>
+              <p className="text-xs flex items-center gap-1 mb-1" style={{ color: C.textSoft }}><MapPin size={11} /> {ev.location}</p>
+              <p className="text-xs leading-relaxed" style={{ color: C.textSoft }}>{ev.description}</p>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="p-4 mb-6">
+          <p className="text-xs leading-relaxed" style={{ color: C.textSoft }}>
+            «لنده هوشمند» سامانه‌ی شهر هوشمند شهرستان لنده است؛ پلی میان شهروندان، فرمانداری، شهرداری و کسب‌وکارهای محلی برای دسترسی سریع‌تر به اطلاعات و خدمات شهر.
+          </p>
+        </Card>
+
+        <button onClick={openAdmin} className="w-full flex items-center justify-center gap-2 text-xs font-bold py-3 rounded-xl" style={{ color: C.textSoft, border: `1px dashed ${C.border}` }}>
+          <LogIn size={14} /> ورود مدیر سامانه
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- BOTTOM NAV ---------------------------------- */
+function BottomNav({ screen, go }) {
+  const tabs = [
+    { key: "home", label: "خانه", icon: Home },
+    { key: "news", label: "اخبار", icon: Newspaper },
+    { key: "market", label: "بازارچه", icon: Store },
+    { key: "crisis", label: "بحران", icon: ShieldAlert },
+    { key: "more", label: "بیشتر", icon: Menu },
+  ];
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-30" style={{ backgroundColor: "#fff", borderTop: `1px solid ${C.border}` }}>
+      <div className="flex justify-around items-center px-2 py-2">
+        {tabs.map((t) => {
+          const isActive = screen === t.key;
+          return (
+            <button key={t.key} onClick={() => go(t.key)} className="flex flex-col items-center gap-0.5 px-2 py-1">
+              <t.icon size={19} style={{ color: isActive ? C.primary : C.textSoft }} />
+              <span className="text-[10px] font-bold" style={{ color: isActive ? C.primary : C.textSoft }}>{t.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- ADMIN: LOGIN ---------------------------------- */
+function AdminLogin({ onSuccess, onCancel }) {
+  const [u, setU] = useState("");
+  const [p, setP] = useState("");
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setErr("");
+    setLoading(true);
+    try {
+      await apiFetch("auth.php", { method: "POST", body: JSON.stringify({ action: "login", username: u, password: p }) });
+      onSuccess();
+    } catch (e2) {
+      setErr("نام کاربری یا رمز عبور نادرست است.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-full" style={{ backgroundColor: C.dark }}>
+      <div className="px-5 pt-16 pb-8 text-center">
+        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
+          <LayoutDashboard size={24} color={C.gold} />
+        </div>
+        <h1 className="text-white text-xl font-extrabold">ورود مدیر سامانه</h1>
+        <p className="text-xs mt-1" style={{ color: "#9FB3AC" }}>پنل مدیریت شهر هوشمند لنده</p>
+      </div>
+      <div className="bg-white rounded-t-3xl px-5 pt-6 pb-8 min-h-[50vh]">
+        <form onSubmit={submit}>
+          <Field label="نام کاربری">
+            <input style={inputStyle} value={u} onChange={(e) => setU(e.target.value)} autoFocus />
+          </Field>
+          <Field label="رمز عبور">
+            <input style={inputStyle} type="password" value={p} onChange={(e) => setP(e.target.value)} />
+          </Field>
+          {err && <p className="text-xs font-bold mb-3" style={{ color: C.alert }}>{err}</p>}
+          <button type="submit" disabled={loading} className="w-full text-white font-bold py-3 rounded-xl mt-1" style={{ backgroundColor: C.primary, opacity: loading ? 0.7 : 1 }}>
+            {loading ? "در حال ورود..." : "ورود"}
+          </button>
+          <button type="button" onClick={onCancel} className="w-full font-bold py-3 rounded-xl mt-2" style={{ color: C.textSoft }}>
+            انصراف
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- ADMIN: GENERIC CRUD SECTION ---------------------------------- */
+function emptyForm(fields) {
+  const f = {};
+  fields.forEach((field) => {
+    if (field.type === "checkbox") f[field.key] = false;
+    else if (field.type === "select") f[field.key] = field.options[0];
+    else f[field.key] = "";
+  });
+  return f;
+}
+
+function AdminSection({ title, table, fields, primaryKey, tagKey }) {
+  const [items, reload] = useApiList(table, []);
+  const [form, setForm] = useState(() => emptyForm(fields));
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState("");
+
+  const addItem = async (e) => {
+    e.preventDefault();
+    setError("");
+    try {
+      await apiFetch(`resource.php?table=${table}`, { method: "POST", body: JSON.stringify({ date: today(), ...form }) });
+      setForm(emptyForm(fields));
+      setOpen(false);
+      reload();
+    } catch (e2) {
+      setError("ثبت اطلاعات با خطا مواجه شد.");
+    }
+  };
+
+  const remove = async (id) => {
+    try {
+      await apiFetch(`resource.php?table=${table}&id=${id}`, { method: "DELETE" });
+      reload();
+    } catch (e2) {}
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-base font-extrabold" style={{ color: C.text }}>{title}</h2>
+        <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg text-white" style={{ backgroundColor: C.primary }}>
+          <Plus size={13} /> {open ? "بستن" : "افزودن"}
+        </button>
+      </div>
+
+      {open && (
+        <form onSubmit={addItem} className="rounded-2xl p-4 mb-4" style={{ backgroundColor: C.primarySoft }}>
+          {error && <p className="text-xs font-bold mb-3" style={{ color: C.alert }}>{error}</p>}
+          {fields.map((field) => (
+            <Field key={field.key} label={field.label}>
+              {field.type === "textarea" ? (
+                <textarea style={{ ...inputStyle, minHeight: 70 }} value={form[field.key]} onChange={(e) => setForm({ ...form, [field.key]: e.target.value })} />
+              ) : field.type === "select" ? (
+                <select style={inputStyle} value={form[field.key]} onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}>
+                  {field.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              ) : field.type === "checkbox" ? (
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <input type="checkbox" checked={form[field.key]} onChange={(e) => setForm({ ...form, [field.key]: e.target.checked })} />
+                  فعال
+                </label>
+              ) : (
+                <input style={inputStyle} value={form[field.key]} onChange={(e) => setForm({ ...form, [field.key]: e.target.value })} required />
+              )}
+            </Field>
+          ))}
+          <button type="submit" className="w-full text-white font-bold py-2.5 rounded-xl text-sm" style={{ backgroundColor: C.primaryDark }}>ثبت</button>
+        </form>
+      )}
+
+      <div className="space-y-2">
+        {!items && <Loading />}
+        {items && items.length === 0 && <EmptyState text="موردی ثبت نشده است." />}
+        {items && items.map((it) => (
+          <Card key={it.id} className="p-3.5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  {tagKey && it[tagKey] !== undefined && (
+                    typeof it[tagKey] === "boolean"
+                      ? <Badge tone={it[tagKey] ? "primary" : "clay"}>{it[tagKey] ? "فعال" : "غیرفعال"}</Badge>
+                      : <Badge tone={it[tagKey] === "بحرانی" ? "alert" : it[tagKey] === "هشدار" ? "gold" : "primary"}>{it[tagKey]}</Badge>
+                  )}
+                  <span className="text-[11px]" style={{ color: C.textSoft }}>{it.date}</span>
+                </div>
+                <p className="text-sm font-bold leading-snug" style={{ color: C.text }}>{it[primaryKey]}</p>
+                {fields.filter((f) => f.type === "textarea").map((f) => (
+                  <p key={f.key} className="text-xs leading-relaxed mt-1 line-clamp-2" style={{ color: C.textSoft }}>{it[f.key]}</p>
+                ))}
+              </div>
+              <button onClick={() => remove(it.id)} className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: C.alertSoft }}>
+                <Trash2 size={14} style={{ color: C.alert }} />
+              </button>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- ADMIN: MARKETPLACE ---------------------------------- */
+function AdminMarket() {
+  const [market, setMarket] = useState(null);
+
+  const reload = async () => {
+    try {
+      setMarket(await apiFetch("market.php?all=1"));
+    } catch (e) {
+      setMarket([]);
+    }
+  };
+  useEffect(() => { reload(); }, []);
+
+  const pending = (market || []).filter((m) => m.status === "pending");
+  const approved = (market || []).filter((m) => m.status === "approved");
+
+  const approve = async (id) => {
+    await apiFetch(`market.php?action=approve&id=${id}`, { method: "POST" });
+    reload();
+  };
+  const remove = async (id) => {
+    await apiFetch(`market.php?id=${id}`, { method: "DELETE" });
+    reload();
+  };
+
+  return (
+    <div>
+      <h2 className="text-base font-extrabold mb-1" style={{ color: C.text }}>بازارچه محلی</h2>
+      <p className="text-xs mb-4" style={{ color: C.textSoft }}>تایید یا رد آگهی‌های ارسالی شهروندان</p>
+
+      <SectionTitle icon={Hourglass} title={`در انتظار تایید (${pending.length})`} />
+      <div className="space-y-2 mb-6">
+        {!market && <Loading />}
+        {market && pending.length === 0 && <EmptyState text="آگهی در انتظار تایید وجود ندارد." />}
+        {pending.map((m) => (
+          <Card key={m.id} className="p-3.5">
+            <div className="flex items-center justify-between mb-1">
+              <Badge tone="clay">{m.category}</Badge>
+              <span className="text-[11px]" style={{ color: C.textSoft }}>{m.date}</span>
+            </div>
+            <p className="text-sm font-bold" style={{ color: C.text }}>{m.title}</p>
+            <p className="text-xs mt-1" style={{ color: C.textSoft }}>{m.description}</p>
+            <p className="text-xs mt-1 font-bold" style={{ color: C.clay }}>{m.price} · {m.phone}</p>
+            <div className="flex gap-2 mt-3">
+              <button onClick={() => approve(m.id)} className="flex-1 flex items-center justify-center gap-1 text-xs font-bold py-2 rounded-lg text-white" style={{ backgroundColor: C.primary }}>
+                <BadgeCheck size={13} /> تایید
+              </button>
+              <button onClick={() => remove(m.id)} className="flex-1 flex items-center justify-center gap-1 text-xs font-bold py-2 rounded-lg" style={{ backgroundColor: C.alertSoft, color: C.alert }}>
+                <Trash2 size={13} /> رد
+              </button>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <SectionTitle icon={Store} title={`آگهی‌های منتشرشده (${approved.length})`} />
+      <div className="space-y-2">
+        {approved.map((m) => (
+          <Card key={m.id} className="p-3.5">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <Badge tone="clay">{m.category}</Badge>
+                <p className="text-sm font-bold mt-1.5" style={{ color: C.text }}>{m.title}</p>
+                <p className="text-xs mt-0.5" style={{ color: C.textSoft }}>{m.price}</p>
+              </div>
+              <button onClick={() => remove(m.id)} className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: C.alertSoft }}>
+                <Trash2 size={14} style={{ color: C.alert }} />
+              </button>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- ADMIN: CRISIS REPORTS ---------------------------------- */
+function AdminCrisisReports() {
+  const [reports, setReports] = useState(null);
+
+  const reload = async () => {
+    try {
+      setReports(await apiFetch("reports.php"));
+    } catch (e) {
+      setReports([]);
+    }
+  };
+  useEffect(() => { reload(); }, []);
+
+  const toggle = async (id) => {
+    await apiFetch(`reports.php?action=toggle&id=${id}`, { method: "POST" });
+    reload();
+  };
+  const remove = async (id) => {
+    await apiFetch(`reports.php?id=${id}`, { method: "DELETE" });
+    reload();
+  };
+
+  return (
+    <div>
+      <h2 className="text-base font-extrabold mb-1" style={{ color: C.text }}>گزارش‌های شهروندان</h2>
+      <p className="text-xs mb-4" style={{ color: C.textSoft }}>حوادث و مشکلات شهری گزارش‌شده توسط مردم</p>
+      <div className="space-y-2">
+        {!reports && <Loading />}
+        {reports && reports.length === 0 && <EmptyState icon={AlertTriangle} text="گزارشی ثبت نشده است." />}
+        {reports && reports.map((r) => (
+          <Card key={r.id} className="p-3.5">
+            <div className="flex items-center justify-between mb-1.5">
+              <Badge tone={r.status === "بررسی شد" ? "primary" : "gold"}>{r.status}</Badge>
+              <span className="text-[11px]" style={{ color: C.textSoft }}>{r.date}</span>
+            </div>
+            <p className="text-sm font-bold" style={{ color: C.text }}>{r.type}</p>
+            <p className="text-xs flex items-center gap-1 mt-1" style={{ color: C.textSoft }}><MapPin size={11} /> {r.location}</p>
+            {r.description && <p className="text-xs mt-1" style={{ color: C.textSoft }}>{r.description}</p>}
+            {r.contact && <p className="text-xs mt-1 font-bold" style={{ color: C.text }}>تماس: {r.contact}</p>}
+            <div className="flex gap-2 mt-3">
+              <button onClick={() => toggle(r.id)} className="flex-1 flex items-center justify-center gap-1 text-xs font-bold py-2 rounded-lg text-white" style={{ backgroundColor: C.primary }}>
+                <Check size={13} /> {r.status === "بررسی شد" ? "بازگشایی" : "علامت‌گذاری به‌عنوان بررسی‌شده"}
+              </button>
+              <button onClick={() => remove(r.id)} className="w-9 flex items-center justify-center rounded-lg" style={{ backgroundColor: C.alertSoft }}>
+                <Trash2 size={13} style={{ color: C.alert }} />
+              </button>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- ADMIN: OVERVIEW ---------------------------------- */
+function AdminOverview() {
+  const [news, setNews] = useState(null);
+  const [market, setMarket] = useState(null);
+  const [reports, setReports] = useState(null);
+  const [alerts, setAlerts] = useState(null);
+
+  useEffect(() => {
+    apiFetch("resource.php?table=news").then(setNews).catch(() => setNews([]));
+    apiFetch("market.php?all=1").then(setMarket).catch(() => setMarket([]));
+    apiFetch("reports.php").then(setReports).catch(() => setReports([]));
+    apiFetch("resource.php?table=crisis_alerts").then(setAlerts).catch(() => setAlerts([]));
+  }, []);
+
+  const stats = [
+    { label: "خبر منتشرشده", value: news ? news.length : "…", icon: Newspaper, tone: C.primary },
+    { label: "آگهی در انتظار تایید", value: market ? market.filter((m) => m.status === "pending").length : "…", icon: Hourglass, tone: C.clay },
+    { label: "گزارش بررسی‌نشده", value: reports ? reports.filter((r) => r.status !== "بررسی شد").length : "…", icon: AlertTriangle, tone: C.alert },
+    { label: "هشدار فعال", value: alerts ? alerts.filter((a) => a.active).length : "…", icon: Siren, tone: C.gold },
+  ];
+
+  return (
+    <div>
+      <h2 className="text-base font-extrabold mb-4" style={{ color: C.text }}>نمای کلی سامانه</h2>
+      <div className="grid grid-cols-2 gap-3">
+        {stats.map((s) => (
+          <Card key={s.label} className="p-4">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2.5" style={{ backgroundColor: s.tone + "1A" }}>
+              <s.icon size={16} style={{ color: s.tone }} />
+            </div>
+            <p className="text-2xl font-extrabold" style={{ color: C.text }}>{s.value}</p>
+            <p className="text-[11px] mt-0.5" style={{ color: C.textSoft }}>{s.label}</p>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- ADMIN: DASHBOARD SHELL ---------------------------------- */
+function AdminDashboard({ onExit }) {
+  const [tab, setTab] = useState("overview");
+  const [drawer, setDrawer] = useState(false);
+
+  const menu = [
+    { key: "overview", label: "نمای کلی", icon: LayoutDashboard },
+    { key: "news", label: "اخبار", icon: Newspaper },
+    { key: "market", label: "بازارچه محلی", icon: Store },
+    { key: "gov", label: "فرمانداری", icon: Landmark },
+    { key: "muni", label: "شهرداری", icon: Building2 },
+    { key: "alerts", label: "هشدارهای بحران", icon: Siren },
+    { key: "reports", label: "گزارش‌های شهروندان", icon: AlertTriangle },
+    { key: "tourism", label: "گردشگری", icon: Mountain },
+    { key: "events", label: "رویدادها", icon: CalendarDays },
+  ];
+
+  const current = menu.find((m) => m.key === tab);
+
+  const content = () => {
+    switch (tab) {
+      case "overview": return <AdminOverview />;
+      case "news": return <AdminSection title="مدیریت اخبار" table="news" primaryKey="title" tagKey="category"
+        fields={[{ key: "title", label: "عنوان خبر", type: "text" }, { key: "category", label: "دسته‌بندی", type: "text" }, { key: "excerpt", label: "متن خبر", type: "textarea" }]} />;
+      case "market": return <AdminMarket />;
+      case "gov": return <AdminSection title="مدیریت اطلاعیه‌های فرمانداری" table="government" primaryKey="title"
+        fields={[{ key: "title", label: "عنوان", type: "text" }, { key: "body", label: "متن اطلاعیه", type: "textarea" }]} />;
+      case "muni": return <AdminSection title="مدیریت اطلاعیه‌های شهرداری" table="municipality" primaryKey="title"
+        fields={[{ key: "title", label: "عنوان", type: "text" }, { key: "body", label: "متن اطلاعیه", type: "textarea" }]} />;
+      case "alerts": return <AdminSection title="مدیریت هشدارهای بحران" table="crisis_alerts" primaryKey="title" tagKey="level"
+        fields={[{ key: "title", label: "عنوان هشدار", type: "text" }, { key: "level", label: "سطح", type: "select", options: ["اطلاعیه", "هشدار", "بحرانی"] }, { key: "body", label: "توضیحات", type: "textarea" }, { key: "active", label: "وضعیت", type: "checkbox" }]} />;
+      case "reports": return <AdminCrisisReports />;
+      case "tourism": return <AdminSection title="مدیریت جاذبه‌های گردشگری" table="tourism" primaryKey="name" tagKey="category"
+        fields={[{ key: "name", label: "نام مکان", type: "text" }, { key: "category", label: "دسته‌بندی", type: "select", options: TOURISM_CATEGORIES }, { key: "description", label: "توضیحات", type: "textarea" }]} />;
+      case "events": return <AdminSection title="مدیریت رویدادها" table="events" primaryKey="title"
+        fields={[{ key: "title", label: "عنوان رویداد", type: "text" }, { key: "date", label: "زمان برگزاری", type: "text" }, { key: "location", label: "مکان", type: "text" }, { key: "description", label: "توضیحات", type: "textarea" }]} />;
+      default: return null;
+    }
+  };
+
+  return (
+    <div className="flex min-h-full" style={{ backgroundColor: C.cream }}>
+      {/* Sidebar - desktop */}
+      <div className="hidden md:flex flex-col w-60 shrink-0" style={{ backgroundColor: C.dark }}>
+        <div className="px-5 py-5">
+          <p className="text-white font-extrabold text-sm">پنل مدیریت لنده</p>
+          <p className="text-[11px] mt-0.5" style={{ color: "#9FB3AC" }}>شهر هوشمند</p>
+        </div>
+        <div className="flex-1 px-3 space-y-1">
+          {menu.map((m) => (
+            <button key={m.key} onClick={() => setTab(m.key)} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold"
+              style={tab === m.key ? { backgroundColor: C.primary, color: "#fff" } : { color: "#C7D4CF" }}>
+              <m.icon size={16} /> {m.label}
+            </button>
+          ))}
+        </div>
+        <button onClick={onExit} className="m-3 flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold" style={{ color: "#C7D4CF" }}>
+          <LogOut size={16} /> خروج از پنل
+        </button>
+      </div>
+
+      {/* Drawer - mobile */}
+      {drawer && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div className="absolute inset-0" style={{ backgroundColor: "rgba(0,0,0,0.4)" }} onClick={() => setDrawer(false)} />
+          <div className="absolute top-0 right-0 bottom-0 w-64" style={{ backgroundColor: C.dark }}>
+            <div className="flex items-center justify-between px-4 py-4">
+              <p className="text-white font-extrabold text-sm">پنل مدیریت لنده</p>
+              <button onClick={() => setDrawer(false)}><X size={18} color="#fff" /></button>
+            </div>
+            <div className="px-3 space-y-1">
+              {menu.map((m) => (
+                <button key={m.key} onClick={() => { setTab(m.key); setDrawer(false); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold"
+                  style={tab === m.key ? { backgroundColor: C.primary, color: "#fff" } : { color: "#C7D4CF" }}>
+                  <m.icon size={16} /> {m.label}
+                </button>
+              ))}
+              <button onClick={onExit} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold mt-2" style={{ color: "#C7D4CF" }}>
+                <LogOut size={16} /> خروج از پنل
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between px-4 py-3.5 md:px-6" style={{ backgroundColor: "#fff", borderBottom: `1px solid ${C.border}` }}>
+          <div className="flex items-center gap-2.5">
+            <button onClick={() => setDrawer(true)} className="md:hidden"><Menu size={20} style={{ color: C.text }} /></button>
+            {current && <current.icon size={16} style={{ color: C.primaryDark }} />}
+            <span className="font-extrabold text-sm" style={{ color: C.text }}>{current?.label}</span>
+          </div>
+          <button onClick={onExit} className="md:hidden"><LogOut size={18} style={{ color: C.textSoft }} /></button>
+        </div>
+        <div className="p-4 md:p-6 pb-10">{content()}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- ROOT APP ---------------------------------- */
+function LendehSmartCity() {
+  const [screen, setScreen] = useState("home");
+  const [adminMode, setAdminMode] = useState(null); // null | 'login' | 'panel'
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await apiFetch("auth.php");
+        if (data && data.admin) setAdminMode("panel");
+      } catch (e) {}
+      setCheckingSession(false);
+    })();
+  }, []);
+
+  const go = (key) => setScreen(key);
+
+  const exitAdmin = async () => {
+    try { await apiFetch("auth.php", { method: "POST", body: JSON.stringify({ action: "logout" }) }); } catch (e) {}
+    setAdminMode(null);
+    setScreen("home");
+  };
+
+  const renderScreen = () => {
+    switch (screen) {
+      case "home": return <HomeScreen go={go} openAdmin={() => setAdminMode("login")} />;
+      case "news": return <NewsScreen goBack={() => go("home")} />;
+      case "market": return <MarketScreen goBack={() => go("home")} />;
+      case "gov": return <AnnouncementScreen title="فرمانداری لنده" table="government" seed={SEED_GOV} icon={Landmark} goBack={() => go("home")} />;
+      case "muni": return <AnnouncementScreen title="شهرداری لنده" table="municipality" seed={SEED_MUNI} icon={Building2} goBack={() => go("home")} />;
+      case "crisis": return <CrisisScreen goBack={() => go("home")} />;
+      case "tourism": return <TourismScreen goBack={() => go("home")} />;
+      case "more": return <MoreScreen go={go} goBack={() => go("home")} openAdmin={() => setAdminMode("login")} />;
+      default: return null;
+    }
+  };
+
+  return (
+    <div dir="rtl" lang="fa" style={{ fontFamily: "'Vazirmatn', Tahoma, sans-serif" }}>
+      <style>{FONT_IMPORT}{`
+        * { box-sizing: border-box; }
+        body { margin: 0; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cfc8b6; border-radius: 4px; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      `}</style>
+      <div className="min-h-screen flex items-center justify-center py-0 md:py-8" style={{ backgroundColor: "#E9E2D0" }}>
+        <div className="w-full md:max-w-[430px] md:rounded-[2rem] md:shadow-2xl overflow-hidden relative" style={{ backgroundColor: C.cream, minHeight: "100vh" }}>
+          {checkingSession && <Loading />}
+          {!checkingSession && adminMode === "login" && (
+            <AdminLogin onSuccess={() => setAdminMode("panel")} onCancel={() => setAdminMode(null)} />
+          )}
+          {!checkingSession && adminMode === "panel" && (
+            <AdminDashboard onExit={exitAdmin} />
+          )}
+          {!checkingSession && !adminMode && (
+            <>
+              <div className="pb-20">{renderScreen()}</div>
+              <BottomNav screen={screen} go={go} />
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById('root')).render(<LendehSmartCity />);
+</script>
+</body>
+</html>
