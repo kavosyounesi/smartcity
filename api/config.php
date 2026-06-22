@@ -7,10 +7,10 @@
 // ====== اطلاعات پایگاه داده ======
 // این مقادیر را پس از ساخت دیتابیس از بخش MySQL Databases در cPanel جایگزین کنید.
 // نام دیتابیس و نام کاربری معمولاً به‌صورت  cpanelusername_dbname  هستند.
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'CPANELUSER_lendeh');
-define('DB_USER', 'CPANELUSER_lendeh');
-define('DB_PASS', 'PUT_YOUR_DATABASE_PASSWORD_HERE');
+define('DB_HOST', '127.0.0.1');
+define('DB_NAME', 'lendeh');
+define('DB_USER', 'root');
+define('DB_PASS', '');
 
 // ====== ورود مدیر سامانه ======
 // نام کاربری پیش‌فرض: admin   |   رمز عبور پیش‌فرض: lendeh1404
