@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
 <title>لنده هوشمند | سامانه شهر هوشمند شهرستان لنده</title>
-<meta name="description" content="سامانه شهر هوشمند شهرستان لنده - بازارچه محلی، اخبار، فرمانداری، شهرداری، مدیریت بحران و گردشگری" />
+<meta name="description" content="سامانه شهر هوشمند شهرستان لنده - بازارچه محلی، اخبار، فرمانداری، شهرداری، مدیریت بحران، گردشگری، پروژه‌های عمرانی و نظرسنجی" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
@@ -80,6 +80,9 @@ const Loader2 = makeIcon("progress_activity");
 const Send = makeIcon("send");
 const BadgeCheck = makeIcon("verified");
 const Hourglass = makeIcon("hourglass_empty");
+const Vote = makeIcon("how_to_vote");
+const UserCircle = makeIcon("account_circle");
+const Construction = makeIcon("construction");
 
 /* ---------------------------------- THEME ---------------------------------- */
 const C = {
@@ -170,6 +173,16 @@ const SEED_TOURISM = [
 const SEED_EVENTS = [
   { id: uid(), title: "جشنواره دشت شقایق", date: "اسفند تا فروردین", location: "دشت آل‌طیب", description: "جشنواره فصلی گردشگری هم‌زمان با شکوفایی شقایق‌های وحشی." },
   { id: uid(), title: "نمایشگاه صنایع‌دستی ایل طیبی", date: "تابستان", location: "میدان مرکزی لنده", description: "نمایش و فروش دست‌بافته‌ها و صنایع‌دستی محلی." },
+];
+
+const SEED_PROJECTS = [
+  { id: uid(), title: "بهسازی و آسفالت محور لنده - وحدت", description: "این پروژه با هدف تسهیل دسترسی روستاهای حاشیه رودخانه جن و کاهش زمان تردد اجرا می‌شود.", progress: 65, status: "در حال اجرا", location: "محور لنده - وحدت", requirements: "تامین اعتبار تکمیلی از سفر استانی، تخصیص ماشین‌آلات راهسازی اضافی", obstacles: "تاخیر در تملک اراضی حریم راه، محدودیت اعتبارات عمرانی استان", date: today() },
+  { id: uid(), title: "احداث مجتمع خدماتی - رفاهی میدان مرکزی", description: "ساخت فضای چندمنظوره برای برگزاری بازارچه‌های محلی و رویدادهای فرهنگی.", progress: 30, status: "در حال اجرا", location: "میدان مرکزی لنده", requirements: "جذب سرمایه‌گذار بخش خصوصی، تامین مصالح ساختمانی", obstacles: "کمبود نقدینگی پیمانکار، توقف فصلی به دلیل شرایط جوی", date: today() },
+  { id: uid(), title: "طرح آبرسانی پایدار روستای عروه", description: "اصلاح و گسترش شبکه آبرسانی برای تامین آب شرب پایدار روستا.", progress: 90, status: "نزدیک به اتمام", location: "روستای عروه", requirements: "بازرسی نهایی و تحویل پروژه", obstacles: "-", date: today() },
+];
+
+const SEED_POLLS = [
+  { id: uid(), question: "کدام پروژه عمرانی برای شما در اولویت است؟", options: ["بهسازی معابر روستایی", "توسعه فضای سبز شهری", "تکمیل آبرسانی روستاها", "ایجاد مراکز گردشگری"], counts: [0, 0, 0, 0], total: 0, active: true, date: today(), myVote: null },
 ];
 
 /* ---------------------------------- API CLIENT ---------------------------------- */
@@ -320,6 +333,63 @@ const inputStyle = {
   color: C.text,
 };
 
+function ProgressBar({ value, tone = C.primary }) {
+  const pct = Math.max(0, Math.min(100, value));
+  return (
+    <div>
+      <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: C.border }}>
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: tone, transition: "width 0.4s" }} />
+      </div>
+    </div>
+  );
+}
+
+const SLIDE_GRADIENTS = [
+  [C.primary, C.dark],
+  [C.clay, C.dark],
+  [C.gold, C.primaryDark],
+  [C.alert, C.dark],
+];
+function gradientFor(i) {
+  const [a, b] = SLIDE_GRADIENTS[i % SLIDE_GRADIENTS.length];
+  return `linear-gradient(135deg, ${a}, ${b})`;
+}
+
+/* ---------------------------------- NEWS SLIDER ---------------------------------- */
+function NewsSlider({ news, go }) {
+  const [index, setIndex] = useState(0);
+  const slides = (news || []).slice(0, 5);
+
+  useEffect(() => {
+    if (slides.length < 2) return;
+    const t = setInterval(() => setIndex((i) => (i + 1) % slides.length), 4500);
+    return () => clearInterval(t);
+  }, [slides.length]);
+
+  if (!news) {
+    return <div className="mx-4 mt-4 mb-6 h-36 rounded-2xl animate-pulse" style={{ backgroundColor: C.border }} />;
+  }
+  if (slides.length === 0) return null;
+
+  return (
+    <div className="px-4 mt-4 mb-6">
+      <div className="relative rounded-2xl overflow-hidden h-40 cursor-pointer" style={{ background: gradientFor(index) }} onClick={() => go("news")}>
+        {slides.map((n, i) => (
+          <div key={n.id} className="absolute inset-0 flex flex-col justify-end p-4" style={{ opacity: i === index ? 1 : 0, transition: "opacity 0.5s" }}>
+            <span className="self-start text-[11px] font-bold px-2 py-1 rounded-full mb-2" style={{ backgroundColor: "rgba(255,255,255,0.18)", color: "#fff" }}>{n.category}</span>
+            <p className="text-white text-base font-extrabold leading-snug line-clamp-2">{n.title}</p>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-center gap-1.5 mt-2.5">
+        {slides.map((_, i) => (
+          <button key={i} onClick={() => setIndex(i)} className="h-1.5 rounded-full" style={{ width: i === index ? 18 : 6, backgroundColor: i === index ? C.primary : C.border, transition: "width 0.3s" }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ---------------------------------- HOME SCREEN ---------------------------------- */
 function HomeScreen({ go, openAdmin }) {
   const [news] = useApiList("news", SEED_NEWS);
@@ -333,6 +403,8 @@ function HomeScreen({ go, openAdmin }) {
     { key: "muni", label: "شهرداری", icon: Building2, tone: C.dark },
     { key: "crisis", label: "مدیریت بحران", icon: ShieldAlert, tone: C.alert },
     { key: "tourism", label: "گردشگری", icon: Mountain, tone: C.gold },
+    { key: "projects", label: "پروژه‌های عمرانی", icon: Construction, tone: C.clay },
+    { key: "polls", label: "نظرسنجی و رای‌گیری", icon: Vote, tone: C.primary },
   ];
 
   return (
@@ -343,6 +415,8 @@ function HomeScreen({ go, openAdmin }) {
         <p className="text-xs mt-1" style={{ color: "#9FB3AC" }}>شهرستان لنده، استان کهگیلویه و بویراحمد</p>
       </div>
       <MountainRidge color={C.cream} height={16} />
+
+      <NewsSlider news={news} go={go} />
 
       <div className="px-4 -mt-1">
         {activeAlert && (
@@ -364,20 +438,6 @@ function HomeScreen({ go, openAdmin }) {
               </div>
               <span className="text-[11px] font-bold leading-tight text-center" style={{ color: C.text }}>{s.label}</span>
             </button>
-          ))}
-        </div>
-
-        <SectionTitle icon={Newspaper} title="تازه‌ترین اخبار" />
-        <div className="space-y-2.5 mb-6">
-          {!news && <Loading />}
-          {news && news.slice(0, 3).map((n) => (
-            <Card key={n.id} onClick={() => go("news")} className="p-3.5">
-              <div className="flex items-center justify-between mb-1.5">
-                <Badge>{n.category}</Badge>
-                <span className="text-[11px]" style={{ color: C.textSoft }}>{n.date}</span>
-              </div>
-              <p className="text-sm font-bold leading-snug" style={{ color: C.text }}>{n.title}</p>
-            </Card>
           ))}
         </div>
 
@@ -717,20 +777,266 @@ function TourismScreen({ goBack }) {
   );
 }
 
+/* ---------------------------------- CIVIL PROJECTS ---------------------------------- */
+const PROJECT_STATUS_TONE = {
+  "تکمیل‌شده": "primary",
+  "نزدیک به اتمام": "gold",
+  "در حال اجرا": "clay",
+  "متوقف‌شده": "alert",
+};
+
+function ProjectsScreen({ goBack }) {
+  const [projects] = useApiList("projects", SEED_PROJECTS);
+  const [active, setActive] = useState(null);
+
+  if (active) {
+    return (
+      <div>
+        <ScreenHeader title="جزئیات پروژه عمرانی" onBack={() => setActive(null)} />
+        <div className="p-4">
+          <Badge tone={PROJECT_STATUS_TONE[active.status] || "primary"}>{active.status}</Badge>
+          <h1 className="text-lg font-extrabold mt-3 leading-snug" style={{ color: C.text }}>{active.title}</h1>
+          {active.location && <p className="text-xs flex items-center gap-1 mt-1.5" style={{ color: C.textSoft }}><MapPin size={12} /> {active.location}</p>}
+
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-bold" style={{ color: C.textSoft }}>درصد پیشرفت پروژه</span>
+              <span className="text-sm font-extrabold" style={{ color: C.primaryDark }}>{active.progress}٪</span>
+            </div>
+            <ProgressBar value={active.progress} />
+          </div>
+
+          <p className="text-sm leading-7 mt-4" style={{ color: C.text }}>{active.description}</p>
+
+          <Card className="p-3.5 mt-4">
+            <p className="text-xs font-extrabold mb-1.5" style={{ color: C.primaryDark }}>نیازمندی‌های پروژه</p>
+            <p className="text-xs leading-relaxed" style={{ color: C.textSoft }}>{active.requirements || "موردی ثبت نشده است."}</p>
+          </Card>
+          <Card className="p-3.5 mt-2.5" style={{ borderColor: "#EBC4BF" }}>
+            <p className="text-xs font-extrabold mb-1.5" style={{ color: C.alert }}>موانع و مشکلات پیش‌روی پروژه</p>
+            <p className="text-xs leading-relaxed" style={{ color: C.textSoft }}>{active.obstacles || "موردی ثبت نشده است."}</p>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <ScreenHeader title="پروژه‌های عمرانی لنده" onBack={goBack} />
+      <div className="p-4 space-y-2.5">
+        {!projects && <Loading />}
+        {projects && projects.length === 0 && <EmptyState icon={Construction} text="پروژه عمرانی ثبت نشده است." />}
+        {projects && projects.map((p) => (
+          <Card key={p.id} onClick={() => setActive(p)} className="p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <Badge tone={PROJECT_STATUS_TONE[p.status] || "primary"}>{p.status}</Badge>
+              <span className="text-sm font-extrabold" style={{ color: C.primaryDark }}>{p.progress}٪</span>
+            </div>
+            <p className="text-sm font-bold leading-snug mb-2" style={{ color: C.text }}>{p.title}</p>
+            <ProgressBar value={p.progress} />
+            {p.location && <p className="text-[11px] flex items-center gap-1 mt-2" style={{ color: C.textSoft }}><MapPin size={11} /> {p.location}</p>}
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- POLLS / VOTING ---------------------------------- */
+function PollsScreen({ goBack, user, openAccount }) {
+  const [polls, setPolls] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+  const [error, setError] = useState("");
+
+  const reload = async () => {
+    try { setPolls(await apiFetch("polls.php")); } catch (e) { setPolls(SEED_POLLS); }
+  };
+  useEffect(() => { reload(); }, []);
+
+  const vote = async (pollId, optionIndex) => {
+    if (!user) { openAccount(); return; }
+    setBusyId(pollId);
+    setError("");
+    try {
+      const updated = await apiFetch(`polls.php?action=vote&id=${pollId}`, { method: "POST", body: JSON.stringify({ option_index: optionIndex }) });
+      setPolls((prev) => prev.map((p) => (p.id === pollId ? updated : p)));
+    } catch (e) {
+      setError(e.message || "ثبت رای با خطا مواجه شد.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <div>
+      <ScreenHeader title="نظرسنجی و رای‌گیری" onBack={goBack} />
+      <div className="p-4">
+        {!user && (
+          <button onClick={openAccount} className="w-full text-right mb-4 rounded-2xl p-3.5 flex items-center justify-between" style={{ backgroundColor: C.primarySoft }}>
+            <div>
+              <p className="text-sm font-extrabold" style={{ color: C.primaryDark }}>برای رای دادن وارد شوید</p>
+              <p className="text-xs mt-0.5" style={{ color: C.textSoft }}>ثبت‌نام رایگان با ایمیل</p>
+            </div>
+            <ChevronLeft size={18} style={{ color: C.primaryDark, transform: "rotate(180deg)" }} />
+          </button>
+        )}
+        {error && (
+          <div className="flex items-center gap-2 text-xs font-bold rounded-xl p-3 mb-3" style={{ backgroundColor: C.alertSoft, color: C.alert }}>
+            <AlertTriangle size={14} /> {error}
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {!polls && <Loading />}
+          {polls && polls.length === 0 && <EmptyState icon={Vote} text="در حال حاضر نظرسنجی فعالی وجود ندارد." />}
+          {polls && polls.map((poll) => {
+            const hasVoted = poll.myVote !== null && poll.myVote !== undefined;
+            return (
+              <Card key={poll.id} className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <Badge tone={poll.active ? "primary" : "clay"}>{poll.active ? "فعال" : "پایان‌یافته"}</Badge>
+                  <span className="text-[11px]" style={{ color: C.textSoft }}>{poll.total} رای</span>
+                </div>
+                <p className="text-sm font-bold leading-snug mb-3" style={{ color: C.text }}>{poll.question}</p>
+                <div className="space-y-2">
+                  {poll.options.map((opt, i) => {
+                    const pct = poll.total > 0 ? Math.round(((poll.counts[i] || 0) / poll.total) * 100) : 0;
+                    const isMine = poll.myVote === i;
+                    if (hasVoted || !poll.active) {
+                      return (
+                        <div key={i} className="relative rounded-xl overflow-hidden p-2.5" style={{ border: `1px solid ${isMine ? C.primary : C.border}` }}>
+                          <div className="absolute inset-y-0 right-0" style={{ width: `${pct}%`, backgroundColor: C.primarySoft, zIndex: 0 }} />
+                          <div className="relative flex items-center justify-between" style={{ zIndex: 1 }}>
+                            <span className="text-xs font-bold" style={{ color: C.text }}>{opt} {isMine && "✓"}</span>
+                            <span className="text-xs font-extrabold" style={{ color: C.primaryDark }}>{pct}٪</span>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return (
+                      <button key={i} disabled={busyId === poll.id} onClick={() => vote(poll.id, i)} className="w-full text-right text-xs font-bold rounded-xl p-2.5" style={{ border: `1px solid ${C.border}`, color: C.text, opacity: busyId === poll.id ? 0.6 : 1 }}>
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- ACCOUNT (CITIZEN REGISTRATION / LOGIN) ---------------------------------- */
+function AccountScreen({ goBack, user, setUser }) {
+  const [mode, setMode] = useState("login"); // login | register
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const data = await apiFetch("account.php", { method: "POST", body: JSON.stringify({ action: mode, ...form }) });
+      setUser(data.user);
+      setForm({ name: "", email: "", password: "" });
+    } catch (e2) {
+      setError(e2.message || "خطایی رخ داد.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try { await apiFetch("account.php", { method: "POST", body: JSON.stringify({ action: "logout" }) }); } catch (e) {}
+    setUser(null);
+  };
+
+  if (user) {
+    return (
+      <div>
+        <ScreenHeader title="حساب کاربری" onBack={goBack} />
+        <div className="p-4">
+          <Card className="p-4 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: C.primarySoft }}>
+              <UserCircle size={24} style={{ color: C.primaryDark }} />
+            </div>
+            <div>
+              <p className="text-sm font-extrabold" style={{ color: C.text }}>{user.name}</p>
+              <p className="text-xs" style={{ color: C.textSoft }}>{user.email}</p>
+            </div>
+          </Card>
+          <button onClick={logout} className="w-full flex items-center justify-center gap-2 text-sm font-bold py-3 rounded-xl mt-4" style={{ backgroundColor: C.alertSoft, color: C.alert }}>
+            <LogOut size={16} /> خروج از حساب کاربری
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <ScreenHeader title="حساب کاربری" onBack={goBack} />
+      <div className="p-4">
+        <div className="flex rounded-xl p-1 mb-4" style={{ backgroundColor: C.border }}>
+          <button onClick={() => setMode("login")} className="flex-1 text-xs font-bold py-2 rounded-lg" style={mode === "login" ? { backgroundColor: "#fff", color: C.text } : { color: C.textSoft }}>ورود</button>
+          <button onClick={() => setMode("register")} className="flex-1 text-xs font-bold py-2 rounded-lg" style={mode === "register" ? { backgroundColor: "#fff", color: C.text } : { color: C.textSoft }}>ثبت‌نام</button>
+        </div>
+
+        <form onSubmit={submit}>
+          {mode === "register" && (
+            <Field label="نام و نام خانوادگی">
+              <input style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+            </Field>
+          )}
+          <Field label="ایمیل">
+            <input style={inputStyle} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+          </Field>
+          <Field label="رمز عبور">
+            <input style={inputStyle} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={6} />
+          </Field>
+          {error && <p className="text-xs font-bold mb-3" style={{ color: C.alert }}>{error}</p>}
+          <button type="submit" disabled={loading} className="w-full text-white font-bold py-3 rounded-xl" style={{ backgroundColor: C.primary, opacity: loading ? 0.7 : 1 }}>
+            {loading ? "در حال ارسال..." : mode === "login" ? "ورود" : "ثبت‌نام"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------------------------- MORE SCREEN ---------------------------------- */
-function MoreScreen({ go, goBack, openAdmin }) {
+function MoreScreen({ go, goBack, openAdmin, user }) {
   const [events] = useApiList("events", SEED_EVENTS);
 
   const links = [
     { key: "gov", label: "فرمانداری لنده", icon: Landmark },
     { key: "muni", label: "شهرداری لنده", icon: Building2 },
     { key: "tourism", label: "گردشگری", icon: Mountain },
+    { key: "projects", label: "پروژه‌های عمرانی", icon: Construction },
+    { key: "polls", label: "نظرسنجی و رای‌گیری", icon: Vote },
   ];
 
   return (
     <div>
       <ScreenHeader title="بیشتر" onBack={goBack} />
       <div className="p-4">
+        <button onClick={() => go("account")} className="w-full text-right mb-4 rounded-2xl p-3.5 flex items-center justify-between" style={{ backgroundColor: C.primarySoft }}>
+          <div className="flex items-center gap-2.5">
+            <UserCircle size={20} style={{ color: C.primaryDark }} />
+            <div>
+              <p className="text-sm font-extrabold" style={{ color: C.primaryDark }}>{user ? user.name : "ورود / ثبت‌نام"}</p>
+              <p className="text-[11px]" style={{ color: C.textSoft }}>{user ? user.email : "با ایمیل خود وارد شوید یا ثبت‌نام کنید"}</p>
+            </div>
+          </div>
+          <ChevronLeft size={18} style={{ color: C.primaryDark, transform: "rotate(180deg)" }} />
+        </button>
+
         <div className="grid grid-cols-1 gap-2 mb-6">
           {links.map((l) => (
             <button key={l.key} onClick={() => go(l.key)} className="flex items-center justify-between rounded-xl p-3.5" style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
@@ -855,6 +1161,7 @@ function emptyForm(fields) {
   fields.forEach((field) => {
     if (field.type === "checkbox") f[field.key] = false;
     else if (field.type === "select") f[field.key] = field.options[0];
+    else if (field.type === "number") f[field.key] = field.default ?? 0;
     else f[field.key] = "";
   });
   return f;
@@ -911,6 +1218,8 @@ function AdminSection({ title, table, fields, primaryKey, tagKey }) {
                   <input type="checkbox" checked={form[field.key]} onChange={(e) => setForm({ ...form, [field.key]: e.target.checked })} />
                   فعال
                 </label>
+              ) : field.type === "number" ? (
+                <input style={inputStyle} type="number" min={0} max={100} value={form[field.key]} onChange={(e) => setForm({ ...form, [field.key]: e.target.value })} required />
               ) : (
                 <input style={inputStyle} value={form[field.key]} onChange={(e) => setForm({ ...form, [field.key]: e.target.value })} required />
               )}
@@ -1120,6 +1429,165 @@ function AdminOverview() {
   );
 }
 
+/* ---------------------------------- ADMIN: POLLS ---------------------------------- */
+function AdminPolls() {
+  const [polls, setPolls] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState(["", ""]);
+  const [error, setError] = useState("");
+
+  const reload = async () => {
+    try { setPolls(await apiFetch("polls.php")); } catch (e) { setPolls([]); }
+  };
+  useEffect(() => { reload(); }, []);
+
+  const updateOption = (i, v) => setOptions((opts) => opts.map((o, idx) => (idx === i ? v : o)));
+  const addOptionField = () => setOptions((opts) => [...opts, ""]);
+  const removeOptionField = (i) => setOptions((opts) => opts.filter((_, idx) => idx !== i));
+
+  const create = async (e) => {
+    e.preventDefault();
+    setError("");
+    const cleanOptions = options.map((o) => o.trim()).filter(Boolean);
+    if (!question.trim() || cleanOptions.length < 2) {
+      setError("سوال و حداقل دو گزینه را وارد کنید.");
+      return;
+    }
+    try {
+      await apiFetch("polls.php", { method: "POST", body: JSON.stringify({ question, options: cleanOptions, date: today() }) });
+      setQuestion("");
+      setOptions(["", ""]);
+      setOpen(false);
+      reload();
+    } catch (e3) {
+      setError(e3.message || "ثبت نظرسنجی با خطا مواجه شد.");
+    }
+  };
+
+  const toggle = async (id) => {
+    await apiFetch(`polls.php?action=toggle&id=${id}`, { method: "POST" });
+    reload();
+  };
+  const remove = async (id) => {
+    await apiFetch(`polls.php?id=${id}`, { method: "DELETE" });
+    reload();
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-base font-extrabold" style={{ color: C.text }}>نظرسنجی و رای‌گیری</h2>
+        <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg text-white" style={{ backgroundColor: C.primary }}>
+          <Plus size={13} /> {open ? "بستن" : "نظرسنجی جدید"}
+        </button>
+      </div>
+
+      {open && (
+        <form onSubmit={create} className="rounded-2xl p-4 mb-4" style={{ backgroundColor: C.primarySoft }}>
+          {error && <p className="text-xs font-bold mb-3" style={{ color: C.alert }}>{error}</p>}
+          <Field label="سوال نظرسنجی">
+            <input style={inputStyle} value={question} onChange={(e) => setQuestion(e.target.value)} required />
+          </Field>
+          <Field label="گزینه‌ها">
+            <div className="space-y-2">
+              {options.map((opt, i) => (
+                <div key={i} className="flex gap-2">
+                  <input style={inputStyle} value={opt} onChange={(e) => updateOption(i, e.target.value)} placeholder={`گزینه ${i + 1}`} />
+                  {options.length > 2 && (
+                    <button type="button" onClick={() => removeOptionField(i)} className="w-9 shrink-0 rounded-lg flex items-center justify-center" style={{ backgroundColor: C.alertSoft }}>
+                      <Trash2 size={13} style={{ color: C.alert }} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={addOptionField} className="mt-2 text-xs font-bold flex items-center gap-1" style={{ color: C.primaryDark }}>
+              <Plus size={13} /> افزودن گزینه
+            </button>
+          </Field>
+          <button type="submit" className="w-full text-white font-bold py-2.5 rounded-xl text-sm mt-1" style={{ backgroundColor: C.primaryDark }}>ثبت نظرسنجی</button>
+        </form>
+      )}
+
+      <div className="space-y-2.5">
+        {!polls && <Loading />}
+        {polls && polls.length === 0 && <EmptyState icon={Vote} text="نظرسنجی‌ای ثبت نشده است." />}
+        {polls && polls.map((poll) => (
+          <Card key={poll.id} className="p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <Badge tone={poll.active ? "primary" : "clay"}>{poll.active ? "فعال" : "غیرفعال"}</Badge>
+              <span className="text-[11px]" style={{ color: C.textSoft }}>{poll.total} رای</span>
+            </div>
+            <p className="text-sm font-bold mb-2" style={{ color: C.text }}>{poll.question}</p>
+            <div className="space-y-1.5 mb-3">
+              {poll.options.map((opt, i) => {
+                const pct = poll.total > 0 ? Math.round(((poll.counts[i] || 0) / poll.total) * 100) : 0;
+                return (
+                  <div key={i} className="flex items-center justify-between text-xs" style={{ color: C.textSoft }}>
+                    <span>{opt}</span>
+                    <span className="font-bold" style={{ color: C.text }}>{poll.counts[i] || 0} ({pct}٪)</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => toggle(poll.id)} className="flex-1 text-xs font-bold py-2 rounded-lg" style={{ backgroundColor: C.claySoft, color: C.clay }}>
+                {poll.active ? "غیرفعال‌سازی" : "فعال‌سازی"}
+              </button>
+              <button onClick={() => remove(poll.id)} className="w-9 flex items-center justify-center rounded-lg" style={{ backgroundColor: C.alertSoft }}>
+                <Trash2 size={13} style={{ color: C.alert }} />
+              </button>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- ADMIN: REGISTERED USERS ---------------------------------- */
+function AdminUsers() {
+  const [users, setUsers] = useState(null);
+
+  const reload = async () => {
+    try { setUsers(await apiFetch("account.php?admin=1")); } catch (e) { setUsers([]); }
+  };
+  useEffect(() => { reload(); }, []);
+
+  const remove = async (id) => {
+    await apiFetch(`account.php?id=${id}`, { method: "DELETE" });
+    reload();
+  };
+
+  return (
+    <div>
+      <h2 className="text-base font-extrabold mb-1" style={{ color: C.text }}>کاربران ثبت‌نام‌شده</h2>
+      <p className="text-xs mb-4" style={{ color: C.textSoft }}>شهروندانی که با ایمیل در سامانه ثبت‌نام کرده‌اند</p>
+      <div className="space-y-2">
+        {!users && <Loading />}
+        {users && users.length === 0 && <EmptyState icon={UserCircle} text="هنوز کاربری ثبت‌نام نکرده است." />}
+        {users && users.map((u) => (
+          <Card key={u.id} className="p-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: C.primarySoft }}>
+                <UserCircle size={18} style={{ color: C.primaryDark }} />
+              </div>
+              <div>
+                <p className="text-sm font-bold" style={{ color: C.text }}>{u.name}</p>
+                <p className="text-xs" style={{ color: C.textSoft }}>{u.email}</p>
+              </div>
+            </div>
+            <button onClick={() => remove(u.id)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: C.alertSoft }}>
+              <Trash2 size={14} style={{ color: C.alert }} />
+            </button>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ---------------------------------- ADMIN: DASHBOARD SHELL ---------------------------------- */
 function AdminDashboard({ onExit }) {
   const [tab, setTab] = useState("overview");
@@ -1134,7 +1602,10 @@ function AdminDashboard({ onExit }) {
     { key: "alerts", label: "هشدارهای بحران", icon: Siren },
     { key: "reports", label: "گزارش‌های شهروندان", icon: AlertTriangle },
     { key: "tourism", label: "گردشگری", icon: Mountain },
+    { key: "projects", label: "پروژه‌های عمرانی", icon: Construction },
+    { key: "polls", label: "نظرسنجی و رای‌گیری", icon: Vote },
     { key: "events", label: "رویدادها", icon: CalendarDays },
+    { key: "users", label: "کاربران ثبت‌نام‌شده", icon: UserCircle },
   ];
 
   const current = menu.find((m) => m.key === tab);
@@ -1154,8 +1625,12 @@ function AdminDashboard({ onExit }) {
       case "reports": return <AdminCrisisReports />;
       case "tourism": return <AdminSection title="مدیریت جاذبه‌های گردشگری" table="tourism" primaryKey="name" tagKey="category"
         fields={[{ key: "name", label: "نام مکان", type: "text" }, { key: "category", label: "دسته‌بندی", type: "select", options: TOURISM_CATEGORIES }, { key: "description", label: "توضیحات", type: "textarea" }]} />;
+      case "projects": return <AdminSection title="مدیریت پروژه‌های عمرانی" table="projects" primaryKey="title" tagKey="status"
+        fields={[{ key: "title", label: "عنوان پروژه", type: "text" }, { key: "status", label: "وضعیت", type: "select", options: ["در حال اجرا", "نزدیک به اتمام", "تکمیل‌شده", "متوقف‌شده"] }, { key: "progress", label: "درصد پیشرفت (۰ تا ۱۰۰)", type: "number", default: 0 }, { key: "location", label: "محل اجرا", type: "text" }, { key: "description", label: "توضیحات پروژه", type: "textarea" }, { key: "requirements", label: "نیازمندی‌ها", type: "textarea" }, { key: "obstacles", label: "موانع و مشکلات", type: "textarea" }]} />;
+      case "polls": return <AdminPolls />;
       case "events": return <AdminSection title="مدیریت رویدادها" table="events" primaryKey="title"
         fields={[{ key: "title", label: "عنوان رویداد", type: "text" }, { key: "date", label: "زمان برگزاری", type: "text" }, { key: "location", label: "مکان", type: "text" }, { key: "description", label: "توضیحات", type: "textarea" }]} />;
+      case "users": return <AdminUsers />;
       default: return null;
     }
   };
@@ -1226,12 +1701,17 @@ function LendehSmartCity() {
   const [screen, setScreen] = useState("home");
   const [adminMode, setAdminMode] = useState(null); // null | 'login' | 'panel'
   const [checkingSession, setCheckingSession] = useState(true);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     (async () => {
       try {
         const data = await apiFetch("auth.php");
         if (data && data.admin) setAdminMode("panel");
+      } catch (e) {}
+      try {
+        const data = await apiFetch("account.php");
+        if (data && data.user) setUser(data.user);
       } catch (e) {}
       setCheckingSession(false);
     })();
@@ -1254,7 +1734,10 @@ function LendehSmartCity() {
       case "muni": return <AnnouncementScreen title="شهرداری لنده" table="municipality" seed={SEED_MUNI} icon={Building2} goBack={() => go("home")} />;
       case "crisis": return <CrisisScreen goBack={() => go("home")} />;
       case "tourism": return <TourismScreen goBack={() => go("home")} />;
-      case "more": return <MoreScreen go={go} goBack={() => go("home")} openAdmin={() => setAdminMode("login")} />;
+      case "projects": return <ProjectsScreen goBack={() => go("home")} />;
+      case "polls": return <PollsScreen goBack={() => go("home")} user={user} openAccount={() => go("account")} />;
+      case "account": return <AccountScreen goBack={() => go("more")} user={user} setUser={setUser} />;
+      case "more": return <MoreScreen go={go} goBack={() => go("home")} openAdmin={() => setAdminMode("login")} user={user} />;
       default: return null;
     }
   };

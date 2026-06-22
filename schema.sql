@@ -82,6 +82,45 @@ CREATE TABLE IF NOT EXISTS `events` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS `projects` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `title` VARCHAR(500) NOT NULL,
+  `description` TEXT,
+  `progress` INT NOT NULL DEFAULT 0,
+  `status` VARCHAR(100) NOT NULL DEFAULT 'در حال اجرا',
+  `location` VARCHAR(300) NOT NULL DEFAULT '',
+  `requirements` TEXT,
+  `obstacles` TEXT,
+  `date` VARCHAR(50) NOT NULL DEFAULT '',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `polls` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `question` VARCHAR(500) NOT NULL,
+  `options` TEXT NOT NULL,
+  `active` TINYINT(1) NOT NULL DEFAULT 1,
+  `date` VARCHAR(50) NOT NULL DEFAULT '',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `poll_votes` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `poll_id` INT NOT NULL,
+  `user_id` INT NOT NULL,
+  `option_index` INT NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `one_vote_per_user` (`poll_id`, `user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(200) NOT NULL,
+  `email` VARCHAR(200) NOT NULL UNIQUE,
+  `password_hash` VARCHAR(255) NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- =====================================================
 --  داده‌های نمونه اولیه (می‌توانید بعداً از پنل مدیریت ویرایش/حذف کنید)
 -- =====================================================
@@ -120,3 +159,11 @@ INSERT INTO `tourism` (`name`, `category`, `description`, `date`) VALUES
 INSERT INTO `events` (`title`, `date`, `location`, `description`) VALUES
 ('جشنواره دشت شقایق', 'اسفند تا فروردین', 'دشت آل‌طیب', 'جشنواره فصلی گردشگری هم‌زمان با شکوفایی شقایق‌های وحشی.'),
 ('نمایشگاه صنایع‌دستی ایل طیبی', 'تابستان', 'میدان مرکزی لنده', 'نمایش و فروش دست‌بافته‌ها و صنایع‌دستی محلی.');
+
+INSERT INTO `projects` (`title`, `description`, `progress`, `status`, `location`, `requirements`, `obstacles`, `date`) VALUES
+('بهسازی و آسفالت محور لنده - وحدت', 'این پروژه با هدف تسهیل دسترسی روستاهای حاشیه رودخانه جن و کاهش زمان تردد اجرا می‌شود.', 65, 'در حال اجرا', 'محور لنده - وحدت', 'تامین اعتبار تکمیلی از سفر استانی، تخصیص ماشین‌آلات راهسازی اضافی', 'تاخیر در تملک اراضی حریم راه، محدودیت اعتبارات عمرانی استان', '۱۴۰۴/۰۱/۰۱'),
+('احداث مجتمع خدماتی - رفاهی میدان مرکزی', 'ساخت فضای چندمنظوره برای برگزاری بازارچه‌های محلی و رویدادهای فرهنگی.', 30, 'در حال اجرا', 'میدان مرکزی لنده', 'جذب سرمایه‌گذار بخش خصوصی، تامین مصالح ساختمانی', 'کمبود نقدینگی پیمانکار، توقف فصلی به دلیل شرایط جوی', '۱۴۰۴/۰۱/۰۱'),
+('طرح آبرسانی پایدار روستای عروه', 'اصلاح و گسترش شبکه آبرسانی برای تامین آب شرب پایدار روستا.', 90, 'نزدیک به اتمام', 'روستای عروه', 'بازرسی نهایی و تحویل پروژه', '-', '۱۴۰۴/۰۱/۰۱');
+
+INSERT INTO `polls` (`question`, `options`, `active`, `date`) VALUES
+('کدام پروژه عمرانی برای شما در اولویت است؟', '["بهسازی معابر روستایی","توسعه فضای سبز شهری","تکمیل آبرسانی روستاها","ایجاد مراکز گردشگری"]', 1, '۱۴۰۴/۰۱/۰۱');
