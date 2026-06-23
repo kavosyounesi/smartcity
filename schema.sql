@@ -167,3 +167,65 @@ INSERT INTO `projects` (`title`, `description`, `progress`, `status`, `location`
 
 INSERT INTO `polls` (`question`, `options`, `active`, `date`) VALUES
 ('کدام پروژه عمرانی برای شما در اولویت است؟', '["بهسازی معابر روستایی","توسعه فضای سبز شهری","تکمیل آبرسانی روستاها","ایجاد مراکز گردشگری"]', 1, '۱۴۰۴/۰۱/۰۱');
+
+-- =====================================================
+--  جداول جدید (نظرات، پیام‌ها، OTP، کارمندان)
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS `staff` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `username` VARCHAR(100) NOT NULL UNIQUE,
+  `password_hash` VARCHAR(255) NOT NULL,
+  `role` ENUM('admin','governor','mayor') NOT NULL DEFAULT 'mayor',
+  `name` VARCHAR(200) NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `news_comments` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `news_id` INT NOT NULL,
+  `user_id` INT,
+  `user_name` VARCHAR(200) NOT NULL DEFAULT 'کاربر ناشناس',
+  `body` TEXT NOT NULL,
+  `status` ENUM('pending','approved') NOT NULL DEFAULT 'pending',
+  `reply` TEXT,
+  `reply_by` VARCHAR(200),
+  `reply_date` VARCHAR(50),
+  `date` VARCHAR(50) NOT NULL DEFAULT '',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `messages` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `from_user_id` INT,
+  `from_name` VARCHAR(200) NOT NULL,
+  `from_contact` VARCHAR(100) NOT NULL DEFAULT '',
+  `to_role` ENUM('governor','mayor','department') NOT NULL DEFAULT 'governor',
+  `department_name` VARCHAR(200) NOT NULL DEFAULT '',
+  `subject` VARCHAR(500) NOT NULL,
+  `body` TEXT NOT NULL,
+  `reply` TEXT,
+  `reply_by` VARCHAR(200),
+  `reply_date` VARCHAR(50),
+  `status` ENUM('new','replied','archived') NOT NULL DEFAULT 'new',
+  `date` VARCHAR(50) NOT NULL DEFAULT '',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `otp_codes` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `phone` VARCHAR(20) NOT NULL,
+  `code` VARCHAR(10) NOT NULL,
+  `expires_at` DATETIME NOT NULL,
+  `used` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =====================================================
+--  حساب‌های پیش‌فرض کارمندان (حتماً قبل از راه‌اندازی رمز را تغییر دهید)
+--  فرماندار: governor / lendeh-gov1404
+--  شهردار: mayor / lendeh-mayor1404
+-- =====================================================
+INSERT IGNORE INTO `staff` (`username`, `password_hash`, `role`, `name`) VALUES
+('governor', '$2b$12$DRWu7IuxDy046F.TqyB6pO2.PbENb4TEs8kDuZZNVeVpKesfj34Uy', 'governor', 'فرماندار شهرستان لنده'),
+('mayor', '$2b$12$uG1nZUDEhQSydaUGpl10yuB.UPCJni/NGvCJB/Qnzi9..AtqaWOn.', 'mayor', 'شهردار لنده');

@@ -4,39 +4,20 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
 <title>لنده هوشمند | سامانه شهر هوشمند شهرستان لنده</title>
-<meta name="description" content="سامانه شهر هوشمند شهرستان لنده - بازارچه محلی، اخبار، فرمانداری، شهرداری، مدیریت بحران، گردشگری، پروژه‌های عمرانی و نظرسنجی" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<meta name="description" content="سامانه شهر هوشمند شهرستان لنده" />
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  .material-symbols-outlined {
-    font-family: 'Material Symbols Outlined';
-    font-weight: normal;
-    font-style: normal;
-    display: inline-block;
-    line-height: 1;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    -webkit-font-smoothing: antialiased;
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  }
-  body { margin: 0; }
+  .material-symbols-outlined{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;display:inline-block;line-height:1;white-space:nowrap;word-wrap:normal;direction:ltr;-webkit-font-smoothing:antialiased;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+  body{margin:0;}
 </style>
 </head>
 <body>
 <div id="root"></div>
-
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script>
-  Babel.registerPreset('react-classic', {
-    presets: [[Babel.availablePresets['react'], { runtime: 'classic' }]]
-  });
-</script>
-
-<script type="text/babel" data-presets="react-classic">
+<script type="text/babel" data-presets="react">
 const { useState, useEffect, useMemo } = React;
 
 /* ---------------------------------- ICONS (Material Symbols, no build step needed) ---------------------------------- */
@@ -88,6 +69,13 @@ const Hourglass = makeIcon("hourglass_empty");
 const Vote = makeIcon("how_to_vote");
 const UserCircle = makeIcon("account_circle");
 const Construction = makeIcon("construction");
+const MessageCircle = makeIcon("chat");
+const MessageSquare = makeIcon("forum");
+const Reply = makeIcon("reply");
+const Smartphone = makeIcon("smartphone");
+const Mail = makeIcon("mail");
+const Users = makeIcon("group");
+const Shield = makeIcon("admin_panel_settings");
 
 /* ---------------------------------- THEME ---------------------------------- */
 const C = {
@@ -188,6 +176,12 @@ const SEED_PROJECTS = [
 
 const SEED_POLLS = [
   { id: uid(), question: "کدام پروژه عمرانی برای شما در اولویت است؟", options: ["بهسازی معابر روستایی", "توسعه فضای سبز شهری", "تکمیل آبرسانی روستاها", "ایجاد مراکز گردشگری"], counts: [0, 0, 0, 0], total: 0, active: true, date: today(), myVote: null },
+];
+
+const DEPARTMENTS = [
+  "فرمانداری", "شهرداری", "اداره بهداشت و درمان", "اداره آموزش و پرورش",
+  "اداره جهاد کشاورزی", "اداره راه و شهرسازی", "اداره میراث فرهنگی و گردشگری",
+  "اداره محیط زیست", "شرکت آب و فاضلاب", "برق منطقه‌ای", "سایر",
 ];
 
 /* ---------------------------------- API CLIENT ---------------------------------- */
@@ -396,7 +390,7 @@ function NewsSlider({ news, go }) {
 }
 
 /* ---------------------------------- HOME SCREEN ---------------------------------- */
-function HomeScreen({ go, openAdmin }) {
+function HomeScreen({ go, openAdmin, openStaff }) {
   const [news] = useApiList("news", SEED_NEWS);
   const [alerts] = useApiList("crisis_alerts", SEED_ALERTS);
   const activeAlert = alerts && alerts.find((a) => a.active);
@@ -410,6 +404,7 @@ function HomeScreen({ go, openAdmin }) {
     { key: "tourism", label: "گردشگری", icon: Mountain, tone: C.gold },
     { key: "projects", label: "پروژه‌های عمرانی", icon: Construction, tone: C.clay },
     { key: "polls", label: "نظرسنجی و رای‌گیری", icon: Vote, tone: C.primary },
+    { key: "messages", label: "پیام به مسئولین", icon: MessageSquare, tone: C.primaryDark },
   ];
 
   return (
@@ -446,16 +441,21 @@ function HomeScreen({ go, openAdmin }) {
           ))}
         </div>
 
-        <button onClick={openAdmin} className="w-full flex items-center justify-center gap-2 text-xs font-bold py-3 rounded-xl" style={{ color: C.textSoft, border: `1px dashed ${C.border}` }}>
-          <LogIn size={14} /> ورود مدیر سامانه
-        </button>
+        <div className="flex gap-2 mt-0">
+          <button onClick={openAdmin} className="flex-1 flex items-center justify-center gap-2 text-xs font-bold py-3 rounded-xl" style={{ color: C.textSoft, border: `1px dashed ${C.border}` }}>
+            <LogIn size={14} /> ورود مدیر
+          </button>
+          <button onClick={openStaff} className="flex-1 flex items-center justify-center gap-2 text-xs font-bold py-3 rounded-xl" style={{ color: C.textSoft, border: `1px dashed ${C.border}` }}>
+            <Shield size={14} /> ورود کارمندان
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
 /* ---------------------------------- NEWS SCREEN ---------------------------------- */
-function NewsScreen({ goBack }) {
+function NewsScreen({ goBack, user, openAccount }) {
   const [news] = useApiList("news", SEED_NEWS);
   const [active, setActive] = useState(null);
 
@@ -468,6 +468,7 @@ function NewsScreen({ goBack }) {
           <h1 className="text-lg font-extrabold mt-3 leading-snug" style={{ color: C.text }}>{active.title}</h1>
           <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: C.textSoft }}><Clock size={12} /> {active.date}</p>
           <p className="text-sm leading-7 mt-4" style={{ color: C.text }}>{active.excerpt}</p>
+          <CommentSection newsId={active.id} user={user} openAccount={openAccount} />
         </div>
       </div>
     );
@@ -935,26 +936,211 @@ function PollsScreen({ goBack, user, openAccount }) {
   );
 }
 
-/* ---------------------------------- ACCOUNT (CITIZEN REGISTRATION / LOGIN) ---------------------------------- */
-function AccountScreen({ goBack, user, setUser }) {
-  const [mode, setMode] = useState("login"); // login | register
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+/* ---------------------------------- COMMENT SECTION (ذیل خبر) ---------------------------------- */
+function CommentSection({ newsId, user, openAccount }) {
+  const [comments, setComments] = useState(null);
+  const [body, setBody] = useState("");
+  const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const reload = async () => {
+    try { setComments(await apiFetch(`comments.php?news_id=${newsId}`)); } catch (e) { setComments([]); }
+  };
+  useEffect(() => { if (newsId) reload(); }, [newsId]);
+
   const submit = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
+    if (!user) { openAccount(); return; }
+    setError(""); setLoading(true);
     try {
-      const data = await apiFetch("account.php", { method: "POST", body: JSON.stringify({ action: mode, ...form }) });
+      await apiFetch(`comments.php?news_id=${newsId}`, { method: "POST", body: JSON.stringify({ body, date: today() }) });
+      setBody(""); setSent(true); reload();
+    } catch (ex) { setError(ex.message || "خطا در ارسال نظر"); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="mt-5">
+      <SectionTitle icon={MessageCircle} title="نظرات" />
+      {sent && <p className="text-xs font-bold rounded-xl p-2.5 mb-3" style={{ backgroundColor: C.primarySoft, color: C.primaryDark }}>نظر شما ثبت شد و پس از تایید نمایش داده می‌شود.</p>}
+      {error && <p className="text-xs font-bold mb-2" style={{ color: C.alert }}>{error}</p>}
+      {!user ? (
+        <button onClick={openAccount} className="w-full text-sm font-bold py-2.5 rounded-xl mb-3" style={{ backgroundColor: C.primarySoft, color: C.primaryDark }}>
+          برای ارسال نظر وارد شوید
+        </button>
+      ) : (
+        <form onSubmit={submit} className="mb-4">
+          <textarea style={{ ...inputStyle, minHeight: 70 }} placeholder="نظر خود را بنویسید..." value={body} onChange={(e) => setBody(e.target.value)} required />
+          <button type="submit" disabled={loading} className="mt-2 w-full flex items-center justify-center gap-2 text-sm font-bold py-2.5 rounded-xl text-white" style={{ backgroundColor: C.primary, opacity: loading ? 0.7 : 1 }}>
+            <Send size={14} /> ارسال نظر
+          </button>
+        </form>
+      )}
+      <div className="space-y-2.5">
+        {!comments && <Loading />}
+        {comments && comments.length === 0 && <p className="text-xs text-center py-4" style={{ color: C.textSoft }}>اولین نفری باشید که نظر می‌دهید!</p>}
+        {comments && comments.map((c) => (
+          <Card key={c.id} className="p-3.5">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-bold" style={{ color: C.primaryDark }}>{c.user_name}</span>
+              <span className="text-[11px]" style={{ color: C.textSoft }}>{c.date}</span>
+            </div>
+            <p className="text-sm leading-relaxed" style={{ color: C.text }}>{c.body}</p>
+            {c.reply && (
+              <div className="mt-2.5 rounded-xl p-2.5" style={{ backgroundColor: C.primarySoft }}>
+                <p className="text-[11px] font-bold mb-1" style={{ color: C.primaryDark }}>
+                  <Reply size={11} /> پاسخ {c.reply_by}:
+                </p>
+                <p className="text-xs leading-relaxed" style={{ color: C.text }}>{c.reply}</p>
+              </div>
+            )}
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- MESSAGES SCREEN (پیام به مسئولین) ---------------------------------- */
+function MessagesScreen({ goBack, user, openAccount }) {
+  const [form, setForm] = useState({ from_name: "", from_contact: "", to_role: "governor", department_name: DEPARTMENTS[0], subject: "", body: "" });
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const TO_OPTIONS = [
+    { value: "governor", label: "فرماندار" },
+    { value: "mayor", label: "شهردار" },
+    { value: "department", label: "اداره / سازمان خاص" },
+  ];
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError(""); setLoading(true);
+    try {
+      const payload = { ...form, date: today() };
+      if (user) { payload.from_name = user.name; payload.from_contact = user.phone || user.email; }
+      await apiFetch("messages.php", { method: "POST", body: JSON.stringify(payload) });
+      setSent(true);
+    } catch (ex) { setError(ex.message || "خطا در ارسال پیام"); }
+    finally { setLoading(false); }
+  };
+
+  if (sent) {
+    return (
+      <div>
+        <ScreenHeader title="پیام به مسئولین" onBack={goBack} />
+        <div className="p-8 flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: C.primarySoft }}>
+            <Check size={32} style={{ color: C.primary }} />
+          </div>
+          <h2 className="text-lg font-extrabold mb-2" style={{ color: C.text }}>پیام ارسال شد</h2>
+          <p className="text-sm" style={{ color: C.textSoft }}>پیام شما دریافت شد و در اسرع وقت بررسی خواهد شد.</p>
+          <button onClick={() => setSent(false)} className="mt-6 text-sm font-bold px-6 py-2.5 rounded-xl text-white" style={{ backgroundColor: C.primary }}>ارسال پیام جدید</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <ScreenHeader title="پیام به مسئولین" onBack={goBack} />
+      <div className="p-4">
+        <div className="rounded-2xl p-3.5 mb-4 flex items-start gap-2.5" style={{ backgroundColor: C.primarySoft }}>
+          <Info size={16} style={{ color: C.primaryDark, flexShrink: 0, marginTop: 2 }} />
+          <p className="text-xs leading-relaxed" style={{ color: C.primaryDark }}>
+            از این بخش می‌توانید به‌صورت مستقیم با فرماندار، شهردار یا ادارات شهرستان لنده در ارتباط باشید. پیام‌های ارسالی توسط مسئولان بررسی و پاسخ‌دهی می‌شوند.
+          </p>
+        </div>
+
+        {error && <p className="text-xs font-bold rounded-xl p-2.5 mb-3" style={{ backgroundColor: C.alertSoft, color: C.alert }}>{error}</p>}
+
+        <form onSubmit={submit}>
+          {!user && (
+            <>
+              <Field label="نام و نام خانوادگی">
+                <input style={inputStyle} value={form.from_name} onChange={(e) => setForm({ ...form, from_name: e.target.value })} required />
+              </Field>
+              <Field label="شماره تماس یا ایمیل">
+                <input style={inputStyle} value={form.from_contact} onChange={(e) => setForm({ ...form, from_contact: e.target.value })} />
+              </Field>
+            </>
+          )}
+
+          <Field label="گیرنده پیام">
+            <select style={inputStyle} value={form.to_role} onChange={(e) => setForm({ ...form, to_role: e.target.value })}>
+              {TO_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </Field>
+
+          {form.to_role === "department" && (
+            <Field label="اداره / سازمان موردنظر">
+              <select style={inputStyle} value={form.department_name} onChange={(e) => setForm({ ...form, department_name: e.target.value })}>
+                {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </Field>
+          )}
+
+          <Field label="موضوع پیام">
+            <input style={inputStyle} value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} required />
+          </Field>
+          <Field label="متن پیام">
+            <textarea style={{ ...inputStyle, minHeight: 100 }} value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} required />
+          </Field>
+
+          <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 text-sm font-bold py-3 rounded-xl text-white" style={{ backgroundColor: C.primary, opacity: loading ? 0.7 : 1 }}>
+            <Send size={15} /> {loading ? "در حال ارسال..." : "ارسال پیام"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- ACCOUNT SCREEN (ایمیل + OTP پیامکی) ---------------------------------- */
+function AccountScreen({ goBack, user, setUser }) {
+  const [tab, setTab] = useState("login");    // login | register | sms
+  const [smsStep, setSmsStep] = useState(1);  // 1=enter phone, 2=enter code
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [smsForm, setSmsForm] = useState({ phone: "", code: "", name: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [otpTimer, setOtpTimer] = useState(0);
+
+  useEffect(() => {
+    if (otpTimer <= 0) return;
+    const t = setInterval(() => setOtpTimer((s) => s - 1), 1000);
+    return () => clearInterval(t);
+  }, [otpTimer]);
+
+  const submitEmail = async (e) => {
+    e.preventDefault(); setError(""); setLoading(true);
+    try {
+      const data = await apiFetch("account.php", { method: "POST", body: JSON.stringify({ action: tab, ...form }) });
       setUser(data.user);
-      setForm({ name: "", email: "", password: "" });
-    } catch (e2) {
-      setError(e2.message || "خطایی رخ داد.");
-    } finally {
-      setLoading(false);
-    }
+    } catch (ex) { setError(ex.message || "خطایی رخ داد"); }
+    finally { setLoading(false); }
+  };
+
+  const sendOtp = async (e) => {
+    e.preventDefault(); setError(""); setLoading(true);
+    try {
+      const data = await apiFetch("otp.php", { method: "POST", body: JSON.stringify({ action: "send", phone: smsForm.phone }) });
+      setSmsStep(2); setOtpTimer(300);
+      // در حالت آزمایشی (SMS_PROVIDER = disabled)، کد در پاسخ سرور است
+      if (data._dev_code) setSmsForm((f) => ({ ...f, code: data._dev_code }));
+    } catch (ex) { setError(ex.message || "خطا در ارسال پیامک"); }
+    finally { setLoading(false); }
+  };
+
+  const verifyOtp = async (e) => {
+    e.preventDefault(); setError(""); setLoading(true);
+    try {
+      const data = await apiFetch("otp.php", { method: "POST", body: JSON.stringify({ action: "verify", ...smsForm }) });
+      setUser(data.user);
+    } catch (ex) { setError(ex.message || "کد نادرست یا منقضی شده است"); }
+    finally { setLoading(false); }
   };
 
   const logout = async () => {
@@ -973,7 +1159,7 @@ function AccountScreen({ goBack, user, setUser }) {
             </div>
             <div>
               <p className="text-sm font-extrabold" style={{ color: C.text }}>{user.name}</p>
-              <p className="text-xs" style={{ color: C.textSoft }}>{user.email}</p>
+              <p className="text-xs" style={{ color: C.textSoft }}>{user.phone || user.email}</p>
             </div>
           </Card>
           <button onClick={logout} className="w-full flex items-center justify-center gap-2 text-sm font-bold py-3 rounded-xl mt-4" style={{ backgroundColor: C.alertSoft, color: C.alert }}>
@@ -988,35 +1174,78 @@ function AccountScreen({ goBack, user, setUser }) {
     <div>
       <ScreenHeader title="حساب کاربری" onBack={goBack} />
       <div className="p-4">
-        <div className="flex rounded-xl p-1 mb-4" style={{ backgroundColor: C.border }}>
-          <button onClick={() => setMode("login")} className="flex-1 text-xs font-bold py-2 rounded-lg" style={mode === "login" ? { backgroundColor: "#fff", color: C.text } : { color: C.textSoft }}>ورود</button>
-          <button onClick={() => setMode("register")} className="flex-1 text-xs font-bold py-2 rounded-lg" style={mode === "register" ? { backgroundColor: "#fff", color: C.text } : { color: C.textSoft }}>ثبت‌نام</button>
+        {/* انتخاب روش ورود */}
+        <div className="flex gap-2 mb-4">
+          {[{ key: "login", label: "ورود", icon: Mail }, { key: "register", label: "ثبت‌نام", icon: UserCircle }, { key: "sms", label: "پیامک", icon: Smartphone }].map((t) => (
+            <button key={t.key} onClick={() => { setTab(t.key); setError(""); setSmsStep(1); }} className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl text-[11px] font-bold" style={tab === t.key ? { backgroundColor: C.dark, color: "#fff" } : { backgroundColor: C.card, color: C.textSoft, border: `1px solid ${C.border}` }}>
+              <t.icon size={16} /> {t.label}
+            </button>
+          ))}
         </div>
 
-        <form onSubmit={submit}>
-          {mode === "register" && (
-            <Field label="نام و نام خانوادگی">
-              <input style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+        {error && <p className="text-xs font-bold rounded-xl p-2.5 mb-3" style={{ backgroundColor: C.alertSoft, color: C.alert }}>{error}</p>}
+
+        {/* ورود / ثبت‌نام با ایمیل */}
+        {(tab === "login" || tab === "register") && (
+          <form onSubmit={submitEmail}>
+            {tab === "register" && (
+              <Field label="نام و نام خانوادگی">
+                <input style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+              </Field>
+            )}
+            <Field label="ایمیل">
+              <input style={inputStyle} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
             </Field>
-          )}
-          <Field label="ایمیل">
-            <input style={inputStyle} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-          </Field>
-          <Field label="رمز عبور">
-            <input style={inputStyle} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={6} />
-          </Field>
-          {error && <p className="text-xs font-bold mb-3" style={{ color: C.alert }}>{error}</p>}
-          <button type="submit" disabled={loading} className="w-full text-white font-bold py-3 rounded-xl" style={{ backgroundColor: C.primary, opacity: loading ? 0.7 : 1 }}>
-            {loading ? "در حال ارسال..." : mode === "login" ? "ورود" : "ثبت‌نام"}
-          </button>
-        </form>
+            <Field label="رمز عبور">
+              <input style={inputStyle} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={6} />
+            </Field>
+            <button type="submit" disabled={loading} className="w-full text-white font-bold py-3 rounded-xl" style={{ backgroundColor: C.primary, opacity: loading ? 0.7 : 1 }}>
+              {loading ? "در حال ارسال..." : tab === "login" ? "ورود با ایمیل" : "ثبت‌نام با ایمیل"}
+            </button>
+          </form>
+        )}
+
+        {/* ورود / ثبت‌نام با پیامک */}
+        {tab === "sms" && (
+          <div>
+            {smsStep === 1 ? (
+              <form onSubmit={sendOtp}>
+                <Field label="شماره موبایل (09xxxxxxxxx)">
+                  <input style={inputStyle} type="tel" value={smsForm.phone} onChange={(e) => setSmsForm({ ...smsForm, phone: e.target.value })} placeholder="09xxxxxxxxx" required />
+                </Field>
+                <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 text-white font-bold py-3 rounded-xl" style={{ backgroundColor: C.primary, opacity: loading ? 0.7 : 1 }}>
+                  <Smartphone size={15} /> {loading ? "در حال ارسال..." : "ارسال کد تایید"}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={verifyOtp}>
+                <p className="text-xs mb-3" style={{ color: C.textSoft }}>کد ۵ رقمی به <b>{smsForm.phone}</b> ارسال شد.</p>
+                <Field label="نام شما (برای اولین ثبت‌نام)">
+                  <input style={inputStyle} value={smsForm.name} onChange={(e) => setSmsForm({ ...smsForm, name: e.target.value })} />
+                </Field>
+                <Field label="کد تایید">
+                  <input style={inputStyle} type="number" value={smsForm.code} onChange={(e) => setSmsForm({ ...smsForm, code: e.target.value })} placeholder="کد ۵ رقمی" required />
+                </Field>
+                {otpTimer > 0 && <p className="text-xs mb-2" style={{ color: C.textSoft }}>اعتبار کد: {Math.floor(otpTimer / 60)}:{String(otpTimer % 60).padStart(2, "0")}</p>}
+                <button type="submit" disabled={loading} className="w-full text-white font-bold py-3 rounded-xl mb-2" style={{ backgroundColor: C.primary, opacity: loading ? 0.7 : 1 }}>
+                  {loading ? "در حال تایید..." : "تایید و ورود"}
+                </button>
+                {otpTimer === 0 && (
+                  <button type="button" onClick={() => { setSmsStep(1); setError(""); }} className="w-full text-sm font-bold py-2.5 rounded-xl" style={{ color: C.textSoft }}>
+                    دریافت مجدد کد
+                  </button>
+                )}
+              </form>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 /* ---------------------------------- MORE SCREEN ---------------------------------- */
-function MoreScreen({ go, goBack, openAdmin, user }) {
+function MoreScreen({ go, goBack, openAdmin, openStaff, user }) {
   const [events] = useApiList("events", SEED_EVENTS);
 
   const links = [
@@ -1025,6 +1254,7 @@ function MoreScreen({ go, goBack, openAdmin, user }) {
     { key: "tourism", label: "گردشگری", icon: Mountain },
     { key: "projects", label: "پروژه‌های عمرانی", icon: Construction },
     { key: "polls", label: "نظرسنجی و رای‌گیری", icon: Vote },
+    { key: "messages", label: "پیام به مسئولین", icon: MessageSquare },
   ];
 
   return (
@@ -1075,9 +1305,14 @@ function MoreScreen({ go, goBack, openAdmin, user }) {
           </p>
         </Card>
 
-        <button onClick={openAdmin} className="w-full flex items-center justify-center gap-2 text-xs font-bold py-3 rounded-xl" style={{ color: C.textSoft, border: `1px dashed ${C.border}` }}>
-          <LogIn size={14} /> ورود مدیر سامانه
-        </button>
+        <div className="flex gap-2">
+          <button onClick={openAdmin} className="flex-1 flex items-center justify-center gap-2 text-xs font-bold py-3 rounded-xl" style={{ color: C.textSoft, border: `1px dashed ${C.border}` }}>
+            <LogIn size={14} /> ورود مدیر
+          </button>
+          <button onClick={openStaff} className="flex-1 flex items-center justify-center gap-2 text-xs font-bold py-3 rounded-xl" style={{ color: C.textSoft, border: `1px dashed ${C.border}` }}>
+            <Shield size={14} /> ورود کارمندان
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1593,6 +1828,324 @@ function AdminUsers() {
   );
 }
 
+/* ---------------------------------- STAFF LOGIN ---------------------------------- */
+function StaffLogin({ onSuccess, onCancel }) {
+  const [u, setU] = useState(""); const [p, setP] = useState("");
+  const [err, setErr] = useState(""); const [loading, setLoading] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault(); setErr(""); setLoading(true);
+    try {
+      const data = await apiFetch("staff_auth.php", { method: "POST", body: JSON.stringify({ action: "login", username: u, password: p }) });
+      onSuccess(data.staff);
+    } catch (ex) { setErr("نام کاربری یا رمز عبور نادرست است."); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="min-h-full" style={{ backgroundColor: C.dark }}>
+      <div className="px-5 pt-16 pb-8 text-center">
+        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
+          <Shield size={24} color={C.gold} />
+        </div>
+        <h1 className="text-white text-xl font-extrabold">ورود کارمندان سامانه</h1>
+        <p className="text-xs mt-1" style={{ color: "#9FB3AC" }}>فرماندار / شهردار</p>
+      </div>
+      <div className="bg-white rounded-t-3xl px-5 pt-6 pb-8 min-h-[50vh]">
+        <form onSubmit={submit}>
+          <Field label="نام کاربری"><input style={inputStyle} value={u} onChange={(e) => setU(e.target.value)} autoFocus /></Field>
+          <Field label="رمز عبور"><input style={inputStyle} type="password" value={p} onChange={(e) => setP(e.target.value)} /></Field>
+          {err && <p className="text-xs font-bold mb-3" style={{ color: C.alert }}>{err}</p>}
+          <button type="submit" disabled={loading} className="w-full text-white font-bold py-3 rounded-xl mt-1" style={{ backgroundColor: C.primary, opacity: loading ? 0.7 : 1 }}>
+            {loading ? "در حال ورود..." : "ورود"}
+          </button>
+          <button type="button" onClick={onCancel} className="w-full font-bold py-3 rounded-xl mt-2" style={{ color: C.textSoft }}>انصراف</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* -------- مولفه مشترک: مدیریت نظرات (برای فرماندار/شهردار/مدیر) -------- */
+function SharedComments({ staff }) {
+  const [comments, setComments] = useState(null);
+  const [replyId, setReplyId] = useState(null);
+  const [replyText, setReplyText] = useState("");
+
+  const reload = async () => {
+    try { setComments(await apiFetch("comments.php?all=1")); } catch (e) { setComments([]); }
+  };
+  useEffect(() => { reload(); }, []);
+
+  const approve = async (id) => { await apiFetch(`comments.php?action=approve&id=${id}`, { method: "POST" }); reload(); };
+  const reject = async (id) => { await apiFetch(`comments.php?action=reject&id=${id}`, { method: "POST" }); reload(); };
+  const sendReply = async (id) => {
+    if (!replyText.trim()) return;
+    await apiFetch(`comments.php?action=reply&id=${id}`, { method: "POST", body: JSON.stringify({ reply: replyText, date: today() }) });
+    setReplyId(null); setReplyText(""); reload();
+  };
+
+  return (
+    <div>
+      <h2 className="text-base font-extrabold mb-4" style={{ color: C.text }}>مدیریت نظرات شهروندان</h2>
+      <div className="space-y-2.5">
+        {!comments && <Loading />}
+        {comments && comments.length === 0 && <EmptyState icon={MessageCircle} text="نظری ثبت نشده است." />}
+        {comments && comments.map((c) => (
+          <Card key={c.id} className="p-3.5">
+            <div className="flex items-center justify-between mb-1.5">
+              <Badge tone={c.status === "approved" ? "primary" : "gold"}>{c.status === "approved" ? "تایید شده" : "در انتظار تایید"}</Badge>
+              <span className="text-[11px]" style={{ color: C.textSoft }}>{c.date}</span>
+            </div>
+            {c.news_title && <p className="text-[11px] mb-1 font-bold" style={{ color: C.primaryDark }}>خبر: {c.news_title}</p>}
+            <p className="text-xs font-bold" style={{ color: C.text }}>{c.user_name}</p>
+            <p className="text-xs leading-relaxed mt-1" style={{ color: C.textSoft }}>{c.body}</p>
+            {c.reply && <p className="text-xs mt-1.5 rounded-lg px-2 py-1" style={{ backgroundColor: C.primarySoft, color: C.primaryDark }}>پاسخ: {c.reply}</p>}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {c.status !== "approved" && (
+                <button onClick={() => approve(c.id)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-white" style={{ backgroundColor: C.primary }}><Check size={11} /> تایید</button>
+              )}
+              {!c.reply && (
+                <button onClick={() => { setReplyId(c.id); setReplyText(""); }} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ backgroundColor: C.claySoft, color: C.clay }}><Reply size={11} /> پاسخ</button>
+              )}
+              <button onClick={() => reject(c.id)} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ backgroundColor: C.alertSoft, color: C.alert }}><Trash2 size={11} /> حذف</button>
+            </div>
+            {replyId === c.id && (
+              <div className="mt-3">
+                <textarea style={{ ...inputStyle, minHeight: 60 }} placeholder="پاسخ خود را بنویسید..." value={replyText} onChange={(e) => setReplyText(e.target.value)} />
+                <div className="flex gap-2 mt-2">
+                  <button onClick={() => sendReply(c.id)} className="flex-1 text-xs font-bold py-2 rounded-lg text-white" style={{ backgroundColor: C.primary }}>ارسال پاسخ</button>
+                  <button onClick={() => setReplyId(null)} className="text-xs font-bold px-3 py-2 rounded-lg" style={{ color: C.textSoft }}>لغو</button>
+                </div>
+              </div>
+            )}
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* -------- مولفه مشترک: مشاهده و پاسخ به پیام‌ها -------- */
+function SharedMessages({ staff }) {
+  const [messages, setMessages] = useState(null);
+  const [replyId, setReplyId] = useState(null);
+  const [replyText, setReplyText] = useState("");
+
+  const reload = async () => {
+    try { setMessages(await apiFetch("messages.php")); } catch (e) { setMessages([]); }
+  };
+  useEffect(() => { reload(); }, []);
+
+  const sendReply = async (id) => {
+    if (!replyText.trim()) return;
+    await apiFetch(`messages.php?action=reply&id=${id}`, { method: "POST", body: JSON.stringify({ reply: replyText, date: today() }) });
+    setReplyId(null); setReplyText(""); reload();
+  };
+  const archive = async (id) => { await apiFetch(`messages.php?action=archive&id=${id}`, { method: "POST" }); reload(); };
+
+  const statusLabel = { new: "جدید", replied: "پاسخ داده شده", archived: "بایگانی" };
+  const statusTone = { new: "alert", replied: "primary", archived: "clay" };
+
+  return (
+    <div>
+      <h2 className="text-base font-extrabold mb-4" style={{ color: C.text }}>پیام‌های شهروندان</h2>
+      <div className="space-y-2.5">
+        {!messages && <Loading />}
+        {messages && messages.length === 0 && <EmptyState icon={MessageSquare} text="پیامی دریافت نشده است." />}
+        {messages && messages.map((m) => (
+          <Card key={m.id} className="p-3.5">
+            <div className="flex items-center justify-between mb-1.5">
+              <Badge tone={statusTone[m.status] || "primary"}>{statusLabel[m.status] || m.status}</Badge>
+              <span className="text-[11px]" style={{ color: C.textSoft }}>{m.date}</span>
+            </div>
+            <p className="text-sm font-bold" style={{ color: C.text }}>{m.subject}</p>
+            <p className="text-xs mt-0.5" style={{ color: C.textSoft }}>از: {m.from_name} ({m.from_contact})</p>
+            <p className="text-xs mt-0.5" style={{ color: C.textSoft }}>به: {m.to_role === "department" ? m.department_name : m.to_role === "governor" ? "فرماندار" : "شهردار"}</p>
+            <p className="text-xs leading-relaxed mt-2" style={{ color: C.text }}>{m.body}</p>
+            {m.reply && <p className="text-xs mt-2 rounded-lg px-2 py-1.5" style={{ backgroundColor: C.primarySoft, color: C.primaryDark }}>پاسخ ({m.reply_by}): {m.reply}</p>}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {!m.reply && (
+                <button onClick={() => { setReplyId(m.id); setReplyText(""); }} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ backgroundColor: C.claySoft, color: C.clay }}><Reply size={11} /> پاسخ</button>
+              )}
+              {m.status !== "archived" && (
+                <button onClick={() => archive(m.id)} className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ backgroundColor: C.border, color: C.textSoft }}>بایگانی</button>
+              )}
+            </div>
+            {replyId === m.id && (
+              <div className="mt-3">
+                <textarea style={{ ...inputStyle, minHeight: 70 }} placeholder="پاسخ خود را بنویسید..." value={replyText} onChange={(e) => setReplyText(e.target.value)} />
+                <div className="flex gap-2 mt-2">
+                  <button onClick={() => sendReply(m.id)} className="flex-1 text-xs font-bold py-2 rounded-lg text-white" style={{ backgroundColor: C.primary }}>ارسال پاسخ</button>
+                  <button onClick={() => setReplyId(null)} className="text-xs font-bold px-3 py-2 rounded-lg" style={{ color: C.textSoft }}>لغو</button>
+                </div>
+              </div>
+            )}
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- GOVERNOR PANEL ---------------------------------- */
+function GovernorPanel({ staff, onExit }) {
+  const [tab, setTab] = useState("overview");
+  const [drawer, setDrawer] = useState(false);
+
+  const menu = [
+    { key: "overview", label: "نمای کلی", icon: LayoutDashboard },
+    { key: "news", label: "مدیریت اخبار", icon: Newspaper },
+    { key: "projects", label: "پروژه‌های عمرانی", icon: Construction },
+    { key: "polls", label: "نظرسنجی و رای‌گیری", icon: Vote },
+    { key: "comments", label: "نظرات شهروندان", icon: MessageCircle },
+    { key: "messages", label: "پیام‌های شهروندان", icon: MessageSquare },
+  ];
+
+  const content = () => {
+    switch (tab) {
+      case "overview": return <AdminOverview />;
+      case "news": return <AdminSection title="مدیریت اخبار" table="news" primaryKey="title" tagKey="category"
+        fields={[{ key: "title", label: "عنوان خبر", type: "text" }, { key: "category", label: "دسته‌بندی", type: "text" }, { key: "excerpt", label: "متن خبر", type: "textarea" }]} />;
+      case "projects": return <AdminSection title="پروژه‌های عمرانی" table="projects" primaryKey="title" tagKey="status"
+        fields={[{ key: "title", label: "عنوان پروژه", type: "text" }, { key: "status", label: "وضعیت", type: "select", options: ["در حال اجرا", "نزدیک به اتمام", "تکمیل‌شده", "متوقف‌شده"] }, { key: "progress", label: "درصد پیشرفت", type: "number", default: 0 }, { key: "location", label: "محل اجرا", type: "text" }, { key: "description", label: "توضیحات", type: "textarea" }, { key: "requirements", label: "نیازمندی‌ها", type: "textarea" }, { key: "obstacles", label: "موانع", type: "textarea" }]} />;
+      case "polls": return <AdminPolls />;
+      case "comments": return <SharedComments staff={staff} />;
+      case "messages": return <SharedMessages staff={staff} />;
+      default: return null;
+    }
+  };
+
+  return (
+    <div className="flex min-h-full" style={{ backgroundColor: C.cream }}>
+      <div className="hidden md:flex flex-col w-60 shrink-0" style={{ backgroundColor: "#1A3040" }}>
+        <div className="px-5 py-5">
+          <p className="text-white font-extrabold text-sm">پنل فرمانداری لنده</p>
+          <p className="text-[11px] mt-0.5" style={{ color: "#9FB3AC" }}>{staff.name}</p>
+        </div>
+        <div className="flex-1 px-3 space-y-1">
+          {menu.map((m) => (
+            <button key={m.key} onClick={() => setTab(m.key)} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold"
+              style={tab === m.key ? { backgroundColor: C.primary, color: "#fff" } : { color: "#C7D4CF" }}>
+              <m.icon size={16} /> {m.label}
+            </button>
+          ))}
+        </div>
+        <button onClick={onExit} className="m-3 flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold" style={{ color: "#C7D4CF" }}>
+          <LogOut size={16} /> خروج
+        </button>
+      </div>
+      {drawer && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div className="absolute inset-0" style={{ backgroundColor: "rgba(0,0,0,0.4)" }} onClick={() => setDrawer(false)} />
+          <div className="absolute top-0 right-0 bottom-0 w-64" style={{ backgroundColor: "#1A3040" }}>
+            <div className="flex items-center justify-between px-4 py-4">
+              <p className="text-white font-extrabold text-sm">پنل فرمانداری</p>
+              <button onClick={() => setDrawer(false)}><X size={18} color="#fff" /></button>
+            </div>
+            <div className="px-3 space-y-1">
+              {menu.map((m) => (
+                <button key={m.key} onClick={() => { setTab(m.key); setDrawer(false); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold"
+                  style={tab === m.key ? { backgroundColor: C.primary, color: "#fff" } : { color: "#C7D4CF" }}>
+                  <m.icon size={16} /> {m.label}
+                </button>
+              ))}
+              <button onClick={onExit} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold mt-2" style={{ color: "#C7D4CF" }}>
+                <LogOut size={16} /> خروج
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2.5 px-4 py-3.5" style={{ backgroundColor: "#fff", borderBottom: `1px solid ${C.border}` }}>
+          <button onClick={() => setDrawer(true)} className="md:hidden"><Menu size={20} style={{ color: C.text }} /></button>
+          <Shield size={16} style={{ color: C.primaryDark }} />
+          <span className="font-extrabold text-sm" style={{ color: C.text }}>{menu.find((m) => m.key === tab)?.label}</span>
+        </div>
+        <div className="p-4 md:p-6 pb-10">{content()}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- MAYOR PANEL ---------------------------------- */
+function MayorPanel({ staff, onExit }) {
+  const [tab, setTab] = useState("projects");
+  const [drawer, setDrawer] = useState(false);
+
+  const menu = [
+    { key: "projects", label: "پروژه‌های عمرانی", icon: Construction },
+    { key: "news", label: "ارسال خبر / گزارش", icon: Newspaper },
+    { key: "comments", label: "نظرات شهروندان", icon: MessageCircle },
+    { key: "messages", label: "پیام‌های شهروندان", icon: MessageSquare },
+  ];
+
+  const content = () => {
+    switch (tab) {
+      case "projects": return <AdminSection title="پروژه‌های عمرانی" table="projects" primaryKey="title" tagKey="status"
+        fields={[{ key: "title", label: "عنوان پروژه", type: "text" }, { key: "status", label: "وضعیت", type: "select", options: ["در حال اجرا", "نزدیک به اتمام", "تکمیل‌شده", "متوقف‌شده"] }, { key: "progress", label: "درصد پیشرفت", type: "number", default: 0 }, { key: "location", label: "محل اجرا", type: "text" }, { key: "description", label: "توضیحات", type: "textarea" }, { key: "requirements", label: "نیازمندی‌ها", type: "textarea" }, { key: "obstacles", label: "موانع", type: "textarea" }]} />;
+      case "news": return <AdminSection title="ارسال خبر / گزارش" table="news" primaryKey="title" tagKey="category"
+        fields={[{ key: "title", label: "عنوان خبر", type: "text" }, { key: "category", label: "دسته‌بندی", type: "text" }, { key: "excerpt", label: "متن خبر / گزارش", type: "textarea" }]} />;
+      case "comments": return <SharedComments staff={staff} />;
+      case "messages": return <SharedMessages staff={staff} />;
+      default: return null;
+    }
+  };
+
+  return (
+    <div className="flex min-h-full" style={{ backgroundColor: C.cream }}>
+      <div className="hidden md:flex flex-col w-60 shrink-0" style={{ backgroundColor: "#2A1F3D" }}>
+        <div className="px-5 py-5">
+          <p className="text-white font-extrabold text-sm">پنل شهرداری لنده</p>
+          <p className="text-[11px] mt-0.5" style={{ color: "#C7BAD4" }}>{staff.name}</p>
+        </div>
+        <div className="flex-1 px-3 space-y-1">
+          {menu.map((m) => (
+            <button key={m.key} onClick={() => setTab(m.key)} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold"
+              style={tab === m.key ? { backgroundColor: C.clay, color: "#fff" } : { color: "#C7BAD4" }}>
+              <m.icon size={16} /> {m.label}
+            </button>
+          ))}
+        </div>
+        <button onClick={onExit} className="m-3 flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold" style={{ color: "#C7BAD4" }}>
+          <LogOut size={16} /> خروج
+        </button>
+      </div>
+      {drawer && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div className="absolute inset-0" style={{ backgroundColor: "rgba(0,0,0,0.4)" }} onClick={() => setDrawer(false)} />
+          <div className="absolute top-0 right-0 bottom-0 w-64" style={{ backgroundColor: "#2A1F3D" }}>
+            <div className="flex items-center justify-between px-4 py-4">
+              <p className="text-white font-extrabold text-sm">پنل شهرداری</p>
+              <button onClick={() => setDrawer(false)}><X size={18} color="#fff" /></button>
+            </div>
+            <div className="px-3 space-y-1">
+              {menu.map((m) => (
+                <button key={m.key} onClick={() => { setTab(m.key); setDrawer(false); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold"
+                  style={tab === m.key ? { backgroundColor: C.clay, color: "#fff" } : { color: "#C7BAD4" }}>
+                  <m.icon size={16} /> {m.label}
+                </button>
+              ))}
+              <button onClick={onExit} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold mt-2" style={{ color: "#C7BAD4" }}>
+                <LogOut size={16} /> خروج
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2.5 px-4 py-3.5" style={{ backgroundColor: "#fff", borderBottom: `1px solid ${C.border}` }}>
+          <button onClick={() => setDrawer(true)} className="md:hidden"><Menu size={20} style={{ color: C.text }} /></button>
+          <Building2 size={16} style={{ color: C.clay }} />
+          <span className="font-extrabold text-sm" style={{ color: C.text }}>{menu.find((m) => m.key === tab)?.label}</span>
+        </div>
+        <div className="p-4 md:p-6 pb-10">{content()}</div>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------------------------- ADMIN: DASHBOARD SHELL ---------------------------------- */
 function AdminDashboard({ onExit }) {
   const [tab, setTab] = useState("overview");
@@ -1605,12 +2158,14 @@ function AdminDashboard({ onExit }) {
     { key: "gov", label: "فرمانداری", icon: Landmark },
     { key: "muni", label: "شهرداری", icon: Building2 },
     { key: "alerts", label: "هشدارهای بحران", icon: Siren },
-    { key: "reports", label: "گزارش‌های شهروندان", icon: AlertTriangle },
+    { key: "reports", label: "گزارش شهروندان", icon: AlertTriangle },
+    { key: "comments", label: "نظرات خبرها", icon: MessageCircle },
+    { key: "messages", label: "پیام‌های شهروندان", icon: MessageSquare },
     { key: "tourism", label: "گردشگری", icon: Mountain },
     { key: "projects", label: "پروژه‌های عمرانی", icon: Construction },
-    { key: "polls", label: "نظرسنجی و رای‌گیری", icon: Vote },
+    { key: "polls", label: "نظرسنجی", icon: Vote },
     { key: "events", label: "رویدادها", icon: CalendarDays },
-    { key: "users", label: "کاربران ثبت‌نام‌شده", icon: UserCircle },
+    { key: "users", label: "کاربران", icon: UserCircle },
   ];
 
   const current = menu.find((m) => m.key === tab);
@@ -1628,6 +2183,8 @@ function AdminDashboard({ onExit }) {
       case "alerts": return <AdminSection title="مدیریت هشدارهای بحران" table="crisis_alerts" primaryKey="title" tagKey="level"
         fields={[{ key: "title", label: "عنوان هشدار", type: "text" }, { key: "level", label: "سطح", type: "select", options: ["اطلاعیه", "هشدار", "بحرانی"] }, { key: "body", label: "توضیحات", type: "textarea" }, { key: "active", label: "وضعیت", type: "checkbox" }]} />;
       case "reports": return <AdminCrisisReports />;
+      case "comments": return <SharedComments staff={{ role: "admin", name: "مدیر سامانه" }} />;
+      case "messages": return <SharedMessages staff={{ role: "admin", name: "مدیر سامانه" }} />;
       case "tourism": return <AdminSection title="مدیریت جاذبه‌های گردشگری" table="tourism" primaryKey="name" tagKey="category"
         fields={[{ key: "name", label: "نام مکان", type: "text" }, { key: "category", label: "دسته‌بندی", type: "select", options: TOURISM_CATEGORIES }, { key: "description", label: "توضیحات", type: "textarea" }]} />;
       case "projects": return <AdminSection title="مدیریت پروژه‌های عمرانی" table="projects" primaryKey="title" tagKey="status"
@@ -1705,19 +2262,16 @@ function AdminDashboard({ onExit }) {
 function LendehSmartCity() {
   const [screen, setScreen] = useState("home");
   const [adminMode, setAdminMode] = useState(null); // null | 'login' | 'panel'
+  const [staffMode, setStaffMode] = useState(null); // null | 'login' | 'panel'
+  const [staff, setStaff] = useState(null);         // { role, name, ... }
   const [checkingSession, setCheckingSession] = useState(true);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
     (async () => {
-      try {
-        const data = await apiFetch("auth.php");
-        if (data && data.admin) setAdminMode("panel");
-      } catch (e) {}
-      try {
-        const data = await apiFetch("account.php");
-        if (data && data.user) setUser(data.user);
-      } catch (e) {}
+      try { const d = await apiFetch("auth.php"); if (d && d.admin) setAdminMode("panel"); } catch (e) {}
+      try { const d = await apiFetch("staff_auth.php"); if (d && d.staff) { setStaff(d.staff); setStaffMode("panel"); } } catch (e) {}
+      try { const d = await apiFetch("account.php"); if (d && d.user) setUser(d.user); } catch (e) {}
       setCheckingSession(false);
     })();
   }, []);
@@ -1726,23 +2280,28 @@ function LendehSmartCity() {
 
   const exitAdmin = async () => {
     try { await apiFetch("auth.php", { method: "POST", body: JSON.stringify({ action: "logout" }) }); } catch (e) {}
-    setAdminMode(null);
-    setScreen("home");
+    setAdminMode(null); setScreen("home");
+  };
+
+  const exitStaff = async () => {
+    try { await apiFetch("staff_auth.php", { method: "POST", body: JSON.stringify({ action: "logout" }) }); } catch (e) {}
+    setStaff(null); setStaffMode(null); setScreen("home");
   };
 
   const renderScreen = () => {
     switch (screen) {
-      case "home": return <HomeScreen go={go} openAdmin={() => setAdminMode("login")} />;
-      case "news": return <NewsScreen goBack={() => go("home")} />;
-      case "market": return <MarketScreen goBack={() => go("home")} />;
-      case "gov": return <AnnouncementScreen title="فرمانداری لنده" table="government" seed={SEED_GOV} icon={Landmark} goBack={() => go("home")} />;
-      case "muni": return <AnnouncementScreen title="شهرداری لنده" table="municipality" seed={SEED_MUNI} icon={Building2} goBack={() => go("home")} />;
-      case "crisis": return <CrisisScreen goBack={() => go("home")} />;
-      case "tourism": return <TourismScreen goBack={() => go("home")} />;
+      case "home":     return <HomeScreen go={go} openAdmin={() => setAdminMode("login")} openStaff={() => setStaffMode("login")} />;
+      case "news":     return <NewsScreen goBack={() => go("home")} user={user} openAccount={() => go("account")} />;
+      case "market":   return <MarketScreen goBack={() => go("home")} />;
+      case "gov":      return <AnnouncementScreen title="فرمانداری لنده" table="government" seed={SEED_GOV} icon={Landmark} goBack={() => go("home")} />;
+      case "muni":     return <AnnouncementScreen title="شهرداری لنده" table="municipality" seed={SEED_MUNI} icon={Building2} goBack={() => go("home")} />;
+      case "crisis":   return <CrisisScreen goBack={() => go("home")} />;
+      case "tourism":  return <TourismScreen goBack={() => go("home")} />;
       case "projects": return <ProjectsScreen goBack={() => go("home")} />;
-      case "polls": return <PollsScreen goBack={() => go("home")} user={user} openAccount={() => go("account")} />;
-      case "account": return <AccountScreen goBack={() => go("more")} user={user} setUser={setUser} />;
-      case "more": return <MoreScreen go={go} goBack={() => go("home")} openAdmin={() => setAdminMode("login")} user={user} />;
+      case "polls":    return <PollsScreen goBack={() => go("home")} user={user} openAccount={() => go("account")} />;
+      case "messages": return <MessagesScreen goBack={() => go("home")} user={user} openAccount={() => go("account")} />;
+      case "account":  return <AccountScreen goBack={() => go("more")} user={user} setUser={setUser} />;
+      case "more":     return <MoreScreen go={go} goBack={() => go("home")} openAdmin={() => setAdminMode("login")} openStaff={() => setStaffMode("login")} user={user} />;
       default: return null;
     }
   };
@@ -1759,13 +2318,24 @@ function LendehSmartCity() {
       <div className="min-h-screen flex items-center justify-center py-0 md:py-8" style={{ backgroundColor: "#E9E2D0" }}>
         <div className="w-full md:max-w-[430px] md:rounded-[2rem] md:shadow-2xl overflow-hidden relative" style={{ backgroundColor: C.cream, minHeight: "100vh" }}>
           {checkingSession && <Loading />}
+
           {!checkingSession && adminMode === "login" && (
             <AdminLogin onSuccess={() => setAdminMode("panel")} onCancel={() => setAdminMode(null)} />
           )}
           {!checkingSession && adminMode === "panel" && (
             <AdminDashboard onExit={exitAdmin} />
           )}
-          {!checkingSession && !adminMode && (
+
+          {!checkingSession && !adminMode && staffMode === "login" && (
+            <StaffLogin onSuccess={(s) => { setStaff(s); setStaffMode("panel"); }} onCancel={() => setStaffMode(null)} />
+          )}
+          {!checkingSession && !adminMode && staffMode === "panel" && staff && (
+            staff.role === "governor"
+              ? <GovernorPanel staff={staff} onExit={exitStaff} />
+              : <MayorPanel staff={staff} onExit={exitStaff} />
+          )}
+
+          {!checkingSession && !adminMode && !staffMode && (
             <>
               <div className="pb-20">{renderScreen()}</div>
               <BottomNav screen={screen} go={go} />
